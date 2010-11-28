@@ -91,6 +91,14 @@ public class OAuth2 {
     	public static final String CODE_AND_TOKEN = "code_and_token";
     }
     
+    public static class GrantType{
+    	public static final String AUTHORIZATION_CODE = "authorization_code";
+    	public static final String PASSWORD = "password";
+    	public static final String ASSERTION = "assertion";
+    	public static final String REFRESH_TOKEN = "refresh_token";
+    	public static final String NONE = "none";
+    }
+    
     /* error code */
     public static class ErrorCode{
     	public static final String INVALID_REQUEST = "invalid_request";
@@ -99,9 +107,9 @@ public class OAuth2 {
     	public static final String REDIRECT_URI_MISMATCH = "redirect_uri_mismatch";
     	public static final String ACCESS_DENIED = "access_denied";
     	public static final String UNSUPPORTED_RESPONSE_TYPE = "unsupported_response_type";
+    	public static final String UNSUPPORTED_GRANT_TYPE = "unsupported_grant_type";
     	public static final String INVALID_SCOPE = "invalid_scope";
     	public static final String INVALID_GRANT = "invalid_grant";
-    	public static final String UNSUPPORTED_GRANT_TYPE = "unsupported_grant_type";
     }
     
     //public static final String HMAC_SHA1 = "HMAC-SHA1";
@@ -114,11 +122,12 @@ public class OAuth2 {
     public static class Problems {
     	
     	public static final String CLIENT_ID_UNKNOWN = "client_id_unknown";
-    	public static final String CODE_UNKNOWN = "code_unknown";
+    	public static final String INVALID_TOKEN = "invalid_token";
     	public static final String PARAMETER_ABSENT = "parameter_absent";
     	public static final String CLIENT_ID_MISMATCH = "client_id_mismatch";
     	public static final String CLIENT_SECRET_MISMATCH = "client_secret_mismatch";
     	public static final String UNSUPPORTED_RESPONSE_TYPE = "unsupported_response_type";
+    	public static final String UNSUPPORTED_GRANT_TYPE = "unsupported_grant_type";
     	public static final String REDIRECT_URI_MISMATCH = "redirect_uri_mismatch";
     	public static final String INVALID_CODE = "invalid_code";
     	public static final String NOT_MARKED_AS_AUTHORIZED = "not_marked_as_authorized";
@@ -194,6 +203,7 @@ public class OAuth2 {
 
             map.put(Problems.CLIENT_ID_UNKNOWN, OAuth2.ErrorCode.INVALID_REQUEST);
             map.put(Problems.UNSUPPORTED_RESPONSE_TYPE, OAuth2.ErrorCode.UNSUPPORTED_RESPONSE_TYPE);
+            map.put(Problems.UNSUPPORTED_GRANT_TYPE, OAuth2.ErrorCode.UNSUPPORTED_GRANT_TYPE);
             map.put(Problems.REDIRECT_URI_MISMATCH, OAuth2.ErrorCode.REDIRECT_URI_MISMATCH);
             map.put(Problems.INVALID_CODE, OAuth2.ErrorCode.INVALID_GRANT);
             map.put(Problems.PARAMETER_ABSENT, OAuth2.ErrorCode.INVALID_REQUEST);
@@ -290,9 +300,9 @@ public class OAuth2 {
                 } else {
                     into.write(',');
                 }
-                into.write(encodeCharacters(percentEncode(toString(parameter.getKey()))));
+                into.write(encodeCharacters(toStringWithQuotation(percentEncode(toString(parameter.getKey())))));
                 into.write(':');
-                into.write(encodeCharacters(percentEncode(toString(parameter.getValue()))));
+                into.write(encodeCharacters(toStringWithQuotation(percentEncode(toString(parameter.getValue())))));
             }
             into.write('}');
         }
@@ -448,7 +458,24 @@ public class OAuth2 {
     private static final String toString(Object from) {
         return (from == null) ? null : from.toString();
     }
-
+    
+    private static final String toStringWithQuotation(Object from) {
+    	
+    	StringBuffer sb;
+    	if(from == null || from.toString().length() == 0)
+    	{
+    		sb = new StringBuffer(2);
+            sb.append('"');
+            sb.append('"');
+            return sb.toString();
+    	}
+    	int         len = from.toString().length();
+        sb = new StringBuffer(len + 2);
+        sb.append('"');
+        sb.append(from.toString());
+        sb.append('"');
+        return sb.toString();
+    }
     /**
      * Construct a URL like the given one, but with the given parameters added
      * to its query string.
