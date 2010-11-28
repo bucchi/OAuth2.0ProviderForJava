@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
+  <display-name>OAuth2.0SampleProvider</display-name>
+  <welcome-file-list>
+    <welcome-file>index.html</welcome-file>
+    <welcome-file>index.htm</welcome-file>
+    <welcome-file>index.jsp</welcome-file>
+    <welcome-file>default.html</welcome-file>
+    <welcome-file>default.htm</welcome-file>
+    <welcome-file>default.jsp</welcome-file>
+  </welcome-file-list>
+  <servlet>
+    <description></description>
+    <display-name>Auth2</display-name>
+    <servlet-name>Auth2</servlet-name>
+    <servlet-class>net.oauth.v2.example.provider.servlets.AuthorizationServlet2</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>Auth2</servlet-name>
+    <url-pattern>/auth</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>Acs2</display-name>
+    <servlet-name>Acs2</servlet-name>
+    <servlet-class>net.oauth.v2.example.provider.servlets.AccessTokenServlet2</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>Acs2</servlet-name>
+    <url-pattern>/acs</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <servlet-name>authorize2</servlet-name>
+    <jsp-file>/authorize2.jsp</jsp-file>
+  </servlet>
+  
+</web-app>

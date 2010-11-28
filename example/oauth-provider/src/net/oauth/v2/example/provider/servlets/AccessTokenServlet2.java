@@ -67,6 +67,9 @@ public class AccessTokenServlet2 extends HttpServlet {
             	accessor = SampleOAuth2Provider.getAccessorByCode(requestMessage);
             }else if (grant_type.equals(OAuth2.GrantType.REFRESH_TOKEN)){
             	accessor = SampleOAuth2Provider.getAccessorByRefreshToken(requestMessage);
+            }else{
+            	OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.UNSUPPORTED_GRANT_TYPE);
+            	throw problem;
             }
             
             SampleOAuth2Provider.VALIDATOR.validateRequestMessageForAccessToken(requestMessage, accessor);

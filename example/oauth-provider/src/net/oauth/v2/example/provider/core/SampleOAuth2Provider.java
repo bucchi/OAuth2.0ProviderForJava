@@ -136,6 +136,10 @@ public class SampleOAuth2Provider {
         
         // try to load from local cache if not throw exception
         String code = requestMessage.getCode();
+        if(code == null){
+        	OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.PARAMETER_ABSENT);       
+            throw problem;
+        }
         OAuth2Accessor accessor = null;
         for (OAuth2Accessor a : SampleOAuth2Provider.ALL_TOKENS) {
             if(a.code != null) {
@@ -147,7 +151,7 @@ public class SampleOAuth2Provider {
         }
         
         if(accessor == null){
-            OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.CODE_UNKNOWN);
+            OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.INVALID_CODE);
             //problem.setParameter(OAuth2.ERROR,OAuth2.UNAUTHORIZED_CLIENT);
             // problem.setParameter(OAuth2.ERROR_DESCRIPTION,"invalid code");
             // problem.setParameter(OAuth2.ERROR_URI,http://example.com/error);        
@@ -161,7 +165,11 @@ public class SampleOAuth2Provider {
     throws IOException, OAuth2ProblemException {
 
     	// try to load from local cache if not throw exception
-    	String refreshToken = requestMessage.getCode();
+    	String refreshToken = requestMessage.getParameter(OAuth2.REFRESH_TOKEN);
+    	if(refreshToken == null){
+        	OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.PARAMETER_ABSENT);       
+            throw problem;
+        }
     	OAuth2Accessor accessor = null;
     	for (OAuth2Accessor a : SampleOAuth2Provider.ALL_TOKENS) {
     		if(a.refreshToken != null) {
@@ -173,8 +181,8 @@ public class SampleOAuth2Provider {
     	}
 
     	if(accessor == null){
-    		OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.CODE_UNKNOWN);
-    		//problem.setParameter(OAuth2.ERROR,OAuth2.UNAUTHORIZED_CLIENT);
+    		OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.INVALID_TOKEN);
+    		problem.setParameter(OAuth2.ERROR,OAuth2.ErrorCode.INVALID_GRANT);
     		// problem.setParameter(OAuth2.ERROR_DESCRIPTION,"invalid code");
     		// problem.setParameter(OAuth2.ERROR_URI,http://example.com/error);        
     		throw problem;

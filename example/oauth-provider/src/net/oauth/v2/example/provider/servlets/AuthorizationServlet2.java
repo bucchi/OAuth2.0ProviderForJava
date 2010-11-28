@@ -43,6 +43,11 @@ public class AuthorizationServlet2 extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
+        try{
+         SampleOAuth2Provider.loadConsumers();
+        }catch(Exception e){
+        	System.out.println("You could not load consumer data.");
+        }
         // nothing at this point
     }
     
@@ -138,6 +143,7 @@ public class AuthorizationServlet2 extends HttpServlet {
         request.setAttribute("CLIE_DESC", client_description);
         request.setAttribute("REDIRECT_URI", redirect_uri);
         request.setAttribute("RESPONSE_TYPE", response_type);
+        request.setAttribute("CLIE_ID", client.clientId);
         request.getRequestDispatcher //
                     ("/authorize2.jsp").forward(request,
                         response);
