@@ -22,3 +22,8 @@ add directories for OAuth 2.0 Provider java library to the source code tree, and
 
 
 (*)This library can work without OAuth java library. So I am going to make them possible to be built without that in near future.
+
+Note:
+-------------
+
+JUnit test code will be added to this github repository also.
