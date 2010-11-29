@@ -128,7 +128,7 @@ public class OAuth2Servlet {
                 if(errorCode != null) problem.getParameters().put(OAuth2.ERROR,errorCode);
             }
             response.reset();
-            //response.setStatus(Integer.parseInt(httpCode.toString()));
+            response.setStatus(Integer.parseInt(httpCode.toString()));
             
             
             OAuth2Message message = new OAuth2Message(null, null, problem.getParameters().entrySet()); 	
