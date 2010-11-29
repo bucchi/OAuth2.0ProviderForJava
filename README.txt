@@ -26,4 +26,4 @@ add directories for OAuth 2.0 Provider java library to the source code tree, and
 Note:
 -------------
 
-JUnit test code will be added to this github repository also.
+JUnit test cases will be added to this github repository also.
