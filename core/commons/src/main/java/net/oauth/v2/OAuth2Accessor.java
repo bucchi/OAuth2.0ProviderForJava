@@ -54,15 +54,22 @@ public class OAuth2Accessor implements Cloneable, Serializable {
     private static final long serialVersionUID = 5590788443138352999L;
     
     public final OAuth2Client client;
+    public String tokenType;
     public String accessToken;
     public String code;
     public String refreshToken;
+    public String expires_in;
+    public String scope;
+    public String state;
+
     
     public OAuth2Accessor(OAuth2Client client) {
         this.client = client;
         this.code = null;
         this.accessToken = null;
         this.refreshToken = null;
+        this.scope = null;
+        this.state = null;
     }
 
     private final Map<String, Object> properties = new HashMap<String, Object>();

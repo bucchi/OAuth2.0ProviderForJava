@@ -50,6 +50,10 @@ import java.util.TreeSet;
 //import net.oauth.signature.OAuthSignatureMethod;
 import net.oauth.v2.OAuth2Validator;
 
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.codec.binary.Base64;
+
 //TODO: move this class into oauth-provider
 /**
  * A simple OAuthValidator, which checks the version, whether the timestamp is
@@ -181,6 +185,7 @@ public class SimpleOAuth2Validator implements OAuth2Validator {
         //checkSingleParameters(message);
         validateResponseType(message);
         validateRedirectUri(message,client);
+        validateScope(message,client);
     }
     
     /** {@inherit} 
@@ -190,10 +195,8 @@ public class SimpleOAuth2Validator implements OAuth2Validator {
         //checkSingleParameters(message);
         validateClientIdWithPassword(message, accessor);
         //validateCode(message,accessor);
-        //validateVersion(message);
         validateRedirectUri(message, accessor.client);
         //validateTimestampAndNonce(message);
-        //validateSignature(message, accessor);
     }
     
     /** Throw an exception if any SINGLE_PARAMETERS occur repeatedly. */
@@ -231,69 +234,63 @@ public class SimpleOAuth2Validator implements OAuth2Validator {
     //    }
     //}
 
-    //protected void validateVersion(OAuthMessage message)
-    //throws OAuthException, IOException {
-        //String versionString = message.getParameter(OAuth.OAUTH_VERSION);
-    //    if (versionString != null) {
-            //double version = Double.parseDouble(versionString);
-    //        if (version.equals(OAuth.)) {
-    //            OAuthProblemException problem = new OAuthProblemException(OAuth.Problems.VERSION_REJECTED);
-    //            problem.setParameter(OAuth.Problems.OAUTH_ACCEPTABLE_VERSIONS, minVersion + "-" + maxVersion);
-    //            throw problem;
-    //        }
-    //    }
-    //}
+    /**
+     * Throw an exception if resource owner's username does not much his or her password.
+     */
+    protected void validateUsernameWithPasswordOfResourceOwner(OAuth2Message message, OAuth2Accessor accessor)
+    throws IOException, OAuth2Exception {
+        String username = message.getParameter(OAuth2.USERNAME);
+        String password = message.getParameter(OAuth2.PASSWORD);
+
+        // you will check if the resource owner's password is OK.
+
+    }
 
     /**
-     * Throw an exception if the timestamp is out of range or the nonce has been
-     * validated previously.
+     * Throw an exception if Basic Authentication has been validated.
+     *
      */
-    //protected void validateTimestampAndNonce(OAuthMessage message)
-    //throws IOException, OAuthProblemException {
-    //    message.requireParameters(OAuth.OAUTH_TIMESTAMP, OAuth.OAUTH_NONCE);
-    //    long timestamp = Long.parseLong(message.getParameter(OAuth.OAUTH_TIMESTAMP));
-    //    long now = currentTimeMsec();
-    //    validateTimestamp(message, timestamp, now);
-    //    validateNonce(message, timestamp, now);
-    //}
+    protected void validateBasicAuthentication(OAuth2Message message, OAuth2Accessor accessor)
+    throws IOException,OAuth2Exception {
+        String authz = message.getHeader("Authorization");
+        if (authz != null) {
+            if(authz.substring(0,5).equals("Basic")){
+                String userPass = new String(Base64.decodeBase64(authz.substring(6).getBytes()), "UTF-8");
 
-    /** Throw an exception if the timestamp [sec] is out of range. */
-    //protected void validateTimestamp(OAuthMessage message, long timestamp, long currentTimeMsec) throws IOException,
-    //        OAuthProblemException {
-    //    long min = (currentTimeMsec - maxTimestampAgeMsec + 500) / 1000L;
-    //    long max = (currentTimeMsec + maxTimestampAgeMsec + 500) / 1000L;
-    //    if (timestamp < min || max < timestamp) {
-    //        OAuthProblemException problem = new OAuthProblemException(OAuth.Problems.TIMESTAMP_REFUSED);
-    //        problem.setParameter(OAuth.Problems.OAUTH_ACCEPTABLE_TIMESTAMPS, min + "-" + max);
-    //        throw problem;
-    //    }
-    //}
+                int loc = userPass.indexOf(":");
+                if (loc == -1) {
+                    OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_CLIENT);
+                    throw problem;
+                }
 
-    /**
-     * Throw an exception if the nonce has been validated previously.
-     * 
-     * @return the earliest point in time at which a call to releaseGarbage
-     *         will actually release some garbage, or null to indicate there's
-     *         nothing currently stored that will become garbage in future.
-     */
-    //protected Date validateNonce(OAuthMessage message, long timestamp, long currentTimeMsec) throws IOException,
-    //        OAuthProblemException {
-    //    UsedNonce nonce = new UsedNonce(timestamp,
-    //            message.getParameter(OAuth.OAUTH_NONCE), message.getConsumerKey(), message.getToken());
-        /*
-         * The OAuth standard requires the token to be omitted from the stored
-         * nonce. But I include it, to harmonize with a Consumer that generates
-         * nonces using several independent computers, each with its own token.
-         */
-    //    boolean valid = false;
-    //    synchronized (usedNonces) {
-    //        valid = usedNonces.add(nonce);
-    //    }
-    //    if (!valid) {
-    //        throw new OAuthProblemException(OAuth.Problems.NONCE_USED);
-    //    }
-    //    return removeOldNonces(currentTimeMsec);
-    //}
+                String userPassedIn = userPass.substring(0, loc);
+                String user = userPassedIn;
+                String pass = userPass.substring(loc + 1);
+                if(user!=null && pass!=null){
+                    if (!user.equals(accessor.client.clientId)) {
+                        OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_CLIENT);
+                        //problem.setParameter(OAuth2.ERROR, OAuth2.INVALID_CLIENT);
+                        // problem.setParameter(OAuth2.ERROR_DESCRIPTION,"The Client ID is required parameter.");
+                        // problem.setParameter(OAuth2.ERROR_URI,http://example.com/error);
+                        throw problem;
+                    }else{
+                        /* credential check. Spec(draft-ietf-oauth-v2-10) says wa have to chchek Authorization parameter
+                       * with Basic Authentication and client_secret parameter.*/
+
+                            if(!pass.equals(accessor.client.clientSecret)){
+                                OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_CLIENT);
+                                throw problem;
+                            }
+
+                            return;
+
+
+                    }
+                }
+
+            }
+        }
+    }
 
     protected void validateClientIdWithPassword(OAuth2Message message, OAuth2Accessor accessor)
     throws OAuth2Exception, IOException {
@@ -350,49 +347,51 @@ public class SimpleOAuth2Validator implements OAuth2Validator {
         	// throw something
     //    }
     //}
-    
+
+
     protected void validateRedirectUri(OAuth2Message message, OAuth2Client client)
     throws OAuth2Exception, IOException {
         String redirect_uri = message.getParameter(OAuth2.REDIRECT_URI);
         if (redirect_uri != null) {
             if (!OAuth2.decodePercent(redirect_uri).equals(client.redirectUri)) {
-                OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.REDIRECT_URI_MISMATCH);
+                OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_REQUEST);
                throw problem;
             }
-        } else{
-        	OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.PARAMETER_ABSENT);
-        	problem.setParameter("parameter_name",OAuth2.REDIRECT_URI);
-            // problem.setParameter(OAuth2.ERROR, OAuth2.INVALID_REQUEST);
-            // problem.setParameter(OAuth2.ERROR_DESCRIPTION,"The Client ID is required parameter.");
-            // problem.setParameter(OAuth2.ERROR_URI,http://example.com/error);
-            
-            throw problem;
         }
     }
-    
+
+    protected void validateScope(OAuth2Message message, OAuth2Client client)
+            throws OAuth2Exception, IOException {
+        String scope = message.getParameter(OAuth2.SCOPE);
+        if (scope != null) {
+            // TODO Check the scope is valid or not(maybe it is up to client??). And if not, throw exception
+            if(scope.equals("invalid")){
+                OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_SCOPE);
+                throw problem;
+            }
+        }
+    }
+
     /* For now, only response_type=code is supported */ 
     protected void validateResponseType(OAuth2Message message)
     throws OAuth2Exception, IOException {
         String response_type = message.getParameter(OAuth2.RESPONSE_TYPE);
         if (response_type != null) {
-            if (!response_type.equals(OAuth2.ResponseType.CODE)) {
-                OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.UNSUPPORTED_RESPONSE_TYPE);
+            if (!( response_type.equals(OAuth2.ResponseType.CODE)||
+                    response_type.equals(OAuth2.ResponseType.TOKEN)||
+                    response_type.equals(OAuth2.ResponseType.CODE_AND_TOKEN))) {
+                OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.UNSUPPORTED_RESPONSE_TYPE);
                 throw problem;
             }
         } else{
-        	OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.PARAMETER_ABSENT);
+        	OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_REQUEST);
         	problem.setParameter("parameter_name",OAuth2.RESPONSE_TYPE);
         	throw problem;
         	
         }
         
     }
-//    protected void validateSignature(OAuthMessage message, OAuthAccessor accessor)
-//    throws OAuthException, IOException, URISyntaxException {
-//        message.requireParameters(OAuth.OAUTH_CONSUMER_KEY,
-//                OAuth.OAUTH_SIGNATURE_METHOD, OAuth.OAUTH_SIGNATURE);
-//        OAuthSignatureMethod.newSigner(message, accessor).validate(message);
-//    }
+
 
     /** Get the number of milliseconds since midnight, January 1, 1970 UTC. */
     protected long currentTimeMsec() {
