@@ -63,7 +63,8 @@ public class OAuth2 {
 
     /** The MIME type for a sequence of OAuth parameters. */
     public static final String FORM_ENCODED = "application/x-www-form-urlencoded";
-    
+
+    public static final String TOKEN_TYPE = "token_type";
     public static final String RESPONSE_TYPE = "response_type";
     public static final String GRANT_TYPE = "grant_type";
     public static final String CLIENT_ID = "client_id";
@@ -84,33 +85,13 @@ public class OAuth2 {
     public static final String ASSERTION_TYPE = "assertion_type";
     public static final String ASSERTION = "assertion";
     public static final String REFRESH_TOKEN = "refresh_token";
-    
-    public static class ResponseType{
-    	public static final String CODE = "code";
-    	public static final String TOKEN = "token";
-    	public static final String CODE_AND_TOKEN = "code_and_token";
-    }
-    
-    public static class GrantType{
-    	public static final String AUTHORIZATION_CODE = "authorization_code";
-    	public static final String PASSWORD = "password";
-    	public static final String ASSERTION = "assertion";
-    	public static final String REFRESH_TOKEN = "refresh_token";
-    	public static final String NONE = "none";
-    }
-    
-    /* error code */
-    public static class ErrorCode{
-    	public static final String INVALID_REQUEST = "invalid_request";
-    	public static final String INVALID_CLIENT = "invalid_client";
-    	public static final String UNAUTHORIZED_CLIENT = "unauthorized_client";
-    	public static final String REDIRECT_URI_MISMATCH = "redirect_uri_mismatch";
-    	public static final String ACCESS_DENIED = "access_denied";
-    	public static final String UNSUPPORTED_RESPONSE_TYPE = "unsupported_response_type";
-    	public static final String UNSUPPORTED_GRANT_TYPE = "unsupported_grant_type";
-    	public static final String INVALID_SCOPE = "invalid_scope";
-    	public static final String INVALID_GRANT = "invalid_grant";
-    }
+
+    /* extendable attributes */
+    public static BaseResponseType ResponseType = BaseResponseType.getInstance();
+
+    public static BaseGrantType GrantType = BaseGrantType.getInstance();
+
+    public static BaseErrorCode ErrorCode = BaseErrorCode.getInstance();
     
     //public static final String HMAC_SHA1 = "HMAC-SHA1";
     //public static final String RSA_SHA1 = "RSA-SHA1";
@@ -492,6 +473,25 @@ public class OAuth2 {
             return url;
         } else {
             return url + ((url.indexOf("?") < 0) ? '?' : '&') + form;
+        }
+    }
+
+    /**
+     * Construct a URL like the given one, but with the given parameters added
+     * as a fragment component.
+     */
+    public static String addParametersAsFragment(String url, String... parameters)
+            throws IOException {
+        return addParametersAsFragment(url, newList(parameters));
+    }
+    public static String addParametersAsFragment(String url,
+                                       Iterable<? extends Map.Entry<String, String>> parameters)
+            throws IOException {
+        String form = formEncode(parameters);
+        if (form == null || form.length() <= 0) {
+            return url;
+        } else {
+            return url + ((url.indexOf("#") < 0) ? '#' : '&') + form;
         }
     }
 
