@@ -323,11 +323,13 @@ public class OAuth2Message {
     //}
 
     /**
-     * Construct a WWW-Authenticate or Authentication header value, containing
-     * the given realm plus all the parameters whose names begin with "oauth_".
+     * Construct a WWW-Authenticate header value, containing
+     * the given realm plus all the parameters whose names begin with "error".
      */
-    public String getAuthorizationHeader(String realm) throws IOException {
+    public String getWWWAuthenticateHeader(String realm) throws IOException {
         StringBuilder into = new StringBuilder();
+        String authScheme = null;
+
         if (realm != null) {
             into.append(" realm=\"").append(OAuth2.percentEncode(realm)).append('"');
         }
@@ -335,15 +337,22 @@ public class OAuth2Message {
         if (parameters != null) {
             for (Map.Entry parameter : parameters) {
                 String name = toString(parameter.getKey());
-                if (name.startsWith("oauth_")) {
+                if (name.startsWith("error")) {
                     if (into.length() > 0) into.append(",");
                     into.append(" ");
                     into.append(OAuth2.percentEncode(name)).append("=\"");
                    into.append(OAuth2.percentEncode(toString(parameter.getValue()))).append('"');
+                }else if(name.startsWith(AUTH_SCHEME)){
+                    authScheme = toString(parameter.getValue());
                 }
+
             }
         }
-        return AUTH_SCHEME + into.toString();
+
+        if(authScheme == null){
+            // TODO Throw exception
+        }
+        return authScheme + " " + into.toString();
     }
 
     /**
@@ -380,7 +389,9 @@ public class OAuth2Message {
         if (authorization != null) {
             Matcher m = AUTHORIZATION.matcher(authorization);
             if (m.matches()) {
-                if (AUTH_SCHEME.equalsIgnoreCase(m.group(1))) {
+                // TODO support "bearer" and "MAC"
+                //if (AUTH_SCHEME_BASIC.equalsIgnoreCase(m.group(1))) {
+                into.add(new OAuth2.Parameter(AUTH_SCHEME, m.group(1)));
                     for (String nvp : m.group(2).split("\\s*,\\s*")) {
                         m = NVP.matcher(nvp);
                         if (m.matches()) {
@@ -389,13 +400,13 @@ public class OAuth2Message {
                             into.add(new OAuth2.Parameter(name, value));
                         }
                     }
-                }
+                //}
             }
         }
         return into;
     }
 
-    public static final String AUTH_SCHEME = "OAuth";
+    public static final String AUTH_SCHEME = "Authorization-Schesme";
 
     public static final String GET = "GET";
     public static final String POST = "POST";

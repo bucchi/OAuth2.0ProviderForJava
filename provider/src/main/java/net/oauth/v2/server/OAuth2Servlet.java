@@ -109,7 +109,7 @@ public class OAuth2Servlet {
     }
     
     public static void handleException(HttpServletRequest request, HttpServletResponse response,
-    		Exception e, String realm, boolean sendBodyInJson, boolean withAuthHeader) 
+    		Exception e, String realm, boolean sendBodyInJson, boolean withAuthHeader)
         throws IOException, ServletException {
     	
         if (e instanceof OAuth2ProblemException) {
@@ -133,7 +133,7 @@ public class OAuth2Servlet {
             
             OAuth2Message message = new OAuth2Message(null, null, problem.getParameters().entrySet()); 	
             if(withAuthHeader){
-            	response.addHeader("WWW-Authenticate", message.getAuthorizationHeader(realm));
+            	response.addHeader("WWW-Authenticate", message.getWWWAuthenticateHeader(realm));
             }
             
             if (sendBodyInJson) {
