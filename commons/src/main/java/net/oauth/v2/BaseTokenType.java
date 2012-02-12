@@ -7,10 +7,10 @@ package net.oauth.v2;
  * Time: 15:05
  * To change this template use File | Settings | File Templates.
  */
-public class BaseResponseType {
-    private static BaseResponseType ourInstance;
+public class BaseTokenType {
+    private static BaseTokenType ourInstance;
 
-    public synchronized static BaseResponseType getInstance() {
+    public synchronized static BaseTokenType getInstance() {
         if (ourInstance == null) {
             // TODO make it possible to specify an extened class with config class
             //String className = "test";
@@ -22,31 +22,30 @@ public class BaseResponseType {
             //    }
             //}
             //if (ourInstance == null)
-                ourInstance = new BaseResponseType();
+                ourInstance = new BaseTokenType();
         }
         return ourInstance;
     }
 
-    public static final String CODE = "code";
-    public static final String TOKEN = "token";
-    public static final String CODE_AND_TOKEN = "code_and_token";
+    public static final String BEARER = "bearer";
 
 
-    private BaseResponseType() {
+
+    private BaseTokenType() {
     }
 
-    public synchronized static void addExtension(BaseResponseType baseResponseType) {
+    public synchronized static void addExtension(BaseTokenType baseTokenType) {
 
-        if (baseResponseType == null) {
+        if (baseTokenType == null) {
             // TODO throw Exception
             return;
         }
 
-        if(ourInstance != null && !(ourInstance instanceof BaseResponseType)){
+        if(ourInstance != null && !(ourInstance instanceof BaseTokenType)){
             // TODO throw Exception
             return;
         }
 
-        ourInstance = baseResponseType;
+        ourInstance = baseTokenType;
     }
 }

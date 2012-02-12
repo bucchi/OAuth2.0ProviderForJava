@@ -12,15 +12,16 @@ public class BaseGrantType {
 
     public synchronized static BaseGrantType getInstance() {
         if (ourInstance == null) {
-            String className = "test";
-            if (className != null && !className.equals("")) {
-                try {
-                    ourInstance = (BaseGrantType) Class.forName(className).newInstance();
-                } catch (Exception e) {
-                    //TODO log
-                }
-            }
-            if (ourInstance == null)
+            // TODO make it possible to specify an extened class with config class
+            //String className = "test";
+            //if (className != null && !className.equals("")) {
+            //    try {
+            //        ourInstance = (BaseResponseType) Class.forName(className).newInstance();
+            //    } catch (Exception e) {
+            //TODO log
+            //    }
+            //}
+            //if (ourInstance == null)
                 ourInstance = new BaseGrantType();
         }
         return ourInstance;
@@ -33,5 +34,20 @@ public class BaseGrantType {
     public static final String NONE = "none";
 
     private BaseGrantType() {
+    }
+
+    public synchronized static void addExtension(BaseGrantType baseGrantType) {
+
+        if (baseGrantType == null) {
+            // TODO throw Exception
+            return;
+        }
+
+        if(ourInstance != null && !(ourInstance instanceof BaseGrantType)){
+            // TODO throw Exception
+            return;
+        }
+
+        ourInstance = baseGrantType;
     }
 }

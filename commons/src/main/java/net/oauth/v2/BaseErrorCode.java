@@ -16,15 +16,16 @@ public class BaseErrorCode {
 
     public synchronized static BaseErrorCode getInstance() {
         if (ourInstance == null) {
-            String className = "test";
-            if (className != null && !className.equals("")) {
-                try {
-                    ourInstance = (BaseErrorCode) Class.forName(className).newInstance();
-                } catch (Exception e) {
-                    //TODO log
-                }
-            }
-            if (ourInstance == null)
+            // TODO make it possible to specify an extened class with config class
+            //String className = "test";
+            //if (className != null && !className.equals("")) {
+            //    try {
+            //        ourInstance = (BaseResponseType) Class.forName(className).newInstance();
+            //    } catch (Exception e) {
+            //TODO log
+            //    }
+            //}
+            //if (ourInstance == null)
                 ourInstance = new BaseErrorCode();
         }
         return ourInstance;
@@ -42,6 +43,21 @@ public class BaseErrorCode {
     public static final String INVALID_TOKEN = "invalid_token";
 
     private BaseErrorCode() {
+    }
+
+    public synchronized static void addExtension(BaseErrorCode baseErrorCode) {
+
+        if (baseErrorCode == null) {
+            // TODO throw Exception
+            return;
+        }
+
+        if(ourInstance != null && !(ourInstance instanceof BaseErrorCode)){
+            // TODO throw Exception
+            return;
+        }
+
+        ourInstance = baseErrorCode;
     }
 
     public static final Map<String, Integer> TO_HTTP_CODE = mapToHttpCode();

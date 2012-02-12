@@ -87,6 +87,8 @@ public class OAuth2 {
     public static final String REFRESH_TOKEN = "refresh_token";
 
     /* extendable attributes */
+    public static BaseTokenType TokenType = BaseTokenType.getInstance();
+
     public static BaseResponseType ResponseType = BaseResponseType.getInstance();
 
     public static BaseGrantType GrantType = BaseGrantType.getInstance();
