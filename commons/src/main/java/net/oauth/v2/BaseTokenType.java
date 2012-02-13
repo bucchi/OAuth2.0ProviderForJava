@@ -31,7 +31,7 @@ public class BaseTokenType {
 
 
 
-    private BaseTokenType() {
+    protected BaseTokenType() {
     }
 
     public synchronized static void addExtension(BaseTokenType baseTokenType) {
