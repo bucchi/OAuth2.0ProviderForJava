@@ -65,7 +65,7 @@ public class SampleOAuth2Provider {
         Properties p = consumerProperties;
         if (p == null) {
             p = new Properties();
-            String resourceName = "/"
+            String resourceName = ""
                     + SampleOAuth2Provider.class.getPackage().getName().replace(
                     ".", "/") + "/provider.properties";
             URL resource = SampleOAuth2Provider.class.getClassLoader().getResource(resourceName);
