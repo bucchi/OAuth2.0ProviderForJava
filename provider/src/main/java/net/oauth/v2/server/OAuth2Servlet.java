@@ -121,12 +121,15 @@ public class OAuth2Servlet {
             if (httpCode == null) {
                 httpCode = SC_FORBIDDEN;
             }
-            
-            Object errorCode = problem.getParameters().get(OAuth2.ERROR);
-            if (errorCode == null) {
-                errorCode = PROBLEM_TO_ERROR_CODE.get(problem.getProblem());
-                if(errorCode != null) problem.getParameters().put(OAuth2.ERROR,errorCode);
+
+            Object errorCode = problem.getProblem();
+            Object error = problem.getParameters().get(OAuth2.ERROR);
+            if (error == null) {
+                error = errorCode;
+                problem.getParameters().put(OAuth2.ERROR,errorCode);
             }
+
+
             response.reset();
             response.setStatus(Integer.parseInt(httpCode.toString()));
             

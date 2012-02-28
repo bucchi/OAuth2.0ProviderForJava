@@ -115,8 +115,7 @@ public class SampleOAuth2Provider {
         client = SampleOAuth2Provider.ALL_CLIENTS.get(client_id);
         
         if(client == null) {
-            OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.CLIENT_ID_UNKNOWN);
-            problem.setParameter(OAuth2.ERROR,OAuth2.ErrorCode.INVALID_CLIENT);
+            OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_CLIENT);
             // problem.setParameter(OAuth2.ERROR_DESCRIPTION,"The Client ID is not pre-registered.");
             // problem.setParameter(OAuth2.ERROR_URI,http://example.com/error);
             if(requestMessage.getParameter(OAuth2.STATE)!=null){
