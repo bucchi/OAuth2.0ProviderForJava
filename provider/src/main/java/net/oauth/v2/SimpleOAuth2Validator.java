@@ -308,7 +308,7 @@ public class SimpleOAuth2Validator implements OAuth2Validator {
             	 * with Basic Authentication and client_secret parameter.*/
             	if(message.getParameter(OAuth2.CLIENT_SECRET) != null){
             		if(!message.getParameter(OAuth2.CLIENT_SECRET).equals(accessor.client.clientSecret)){
-            			OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.CLIENT_SECRET_MISMATCH);
+            			OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_CLIENT);
                         throw problem;	
             		}
             		
@@ -355,7 +355,7 @@ public class SimpleOAuth2Validator implements OAuth2Validator {
         if (redirect_uri != null) {
             if (!OAuth2.decodePercent(redirect_uri).equals(client.redirectUri)) {
                 OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_REQUEST);
-               throw problem;
+                throw problem;
             }
         }
     }

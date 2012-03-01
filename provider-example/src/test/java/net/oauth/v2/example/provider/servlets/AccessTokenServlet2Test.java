@@ -24,17 +24,15 @@ import junit.framework.TestCase;
 import com.meterware.servletunit.*;
 import com.meterware.httpunit.*;
 import net.oauth.v2.*;
-import net.oauth.v2.example.provider.core.*;
-import net.oauth.v2.example.provider.servlets.AuthorizationServlet2;
+import net.oauth.v2.example.provider.core.SampleOAuth2Provider;
 
-import org.apache.jasper.servlet.JspServlet;
 import org.mortbay.jetty.testing.ServletTester;
 import org.mortbay.jetty.testing.HttpTester;
+
 /**
  * @author Yutaka Obuchi
- * @author John Kristian
  */
-public class AuthorizationServlet2Test extends TestCase {
+public class AccessTokenServlet2Test extends TestCase {
 
     //private long currentTimeMsec;
     //private SimpleOAuth2Validator validator;
@@ -50,64 +48,96 @@ public class AuthorizationServlet2Test extends TestCase {
     //    };
     //}
 
-    public void testDoGet1() throws Exception {
+	public void testDoPost1() throws Exception {
+		// generate code first
+        SampleOAuth2Provider.loadConsumers();
+		OAuth2Client o2c = new OAuth2Client("http://localhost/CookieJar/Callback","myKey","mySecret");
+    	o2c.setProperty("name",o2c.clientId);
+    	OAuth2Accessor o2a = new OAuth2Accessor(o2c);
+    	o2a.setProperty("authorized",true);
+    	SampleOAuth2Provider.generateCode(o2a);
 
         ServletTester tester=new ServletTester();
         tester.setContextPath("/test");
-        tester.addServlet(AuthorizationServlet2.class, "/authorize");
-        tester.setResourceBase("./web");
-        tester.addServlet(JspServlet.class, "*.jsp");
+        tester.addServlet(AccessTokenServlet2.class, "/token");
         tester.start();
 
-        String queryParameter = "response_type=code&client_id=myKey&state=xyz&redirect_uri=http%3A%2F%2Flocalhost%2FCookieJar%2FCallback";
+        String postParameter = "grant_type=authorization_code&code="+o2a.code+
+                "&client_id=myKey&client_secret=mySecret&state=xyz&redirect_uri=http%3A%2F%2Flocalhost%2FCookieJar%2FCallback";
         HttpTester request = new HttpTester();
         HttpTester response = new HttpTester();
-        request.setMethod("GET");
+        request.setMethod("POST");
         request.setHeader("Host","server.example.com");
-        request.setURI("/test/authorize"+"?"+queryParameter);
+        request.setURI("/test/token");
         request.setVersion("HTTP/1.1");
+        request.setHeader("Content-Type","application/x-www-form-urlencoded;charset=UTF-8");
+        request.setContent(postParameter);
 
         response.parse(tester.getResponses(request.generate()));
 
         assertEquals(200,response.getStatus());
-        assertTrue(response.getContent().contains("<h3>\"CookieJar\" is trying to access your information.</h3>"));
-        assertTrue(response.getContent().contains("<form name=\"authZForm\" action=\"auth\" method=\"POST\">\n" +
-                "        <input type=\"text\" name=\"userId\" value=\"\" size=\"20\" /><br>\n" +
-                "        <input type=\"hidden\" name=\"redirect_uri\" value=\"http://localhost/CookieJar/Callback\"/>\n" +
-                "        <input type=\"hidden\" name=\"client_id\" value=\"myKey\"/>        \n" +
-                "        <input type=\"submit\" name=\"Authorize\" value=\"Authorize\"/>\n" +
-                "    </form>"));
-
+        assertEquals("{\"access_token\":\"" + o2a.accessToken +
+                "\",\"token_type\":\"" + o2a.tokenType +
+                "\",\"expires_in\":\"3600\",\"refresh_token\":\"" + o2a.refreshToken +
+                                        "\"}",response.getContent());
+		
     }
 
     /*
-     * Error Case: unknown client id with error=invalid_client
+     * Error Case: invalid client secret with error=invalid_client
      */
-    public void testDoGet2() throws Exception {
+    public void testDoPost2() throws Exception {
+        // generate code first
+        SampleOAuth2Provider.loadConsumers();
+        OAuth2Client o2c = new OAuth2Client("http://localhost/CookieJar/Callback","myKey","mySecret");
+        o2c.setProperty("name",o2c.clientId);
+        OAuth2Accessor o2a = new OAuth2Accessor(o2c);
+        o2a.setProperty("authorized",true);
+        SampleOAuth2Provider.generateCode(o2a);
 
         ServletTester tester=new ServletTester();
         tester.setContextPath("/test");
-        tester.addServlet(AuthorizationServlet2.class, "/authorize");
-        tester.setResourceBase("./web");
-        tester.addServlet(JspServlet.class, "*.jsp");
+        tester.addServlet(AccessTokenServlet2.class, "/token");
         tester.start();
 
-        String queryParameter = "response_type=code&client_id=invalidKey&state=xyz&redirect_uri=http%3A%2F%2Flocalhost%2FCookieJar%2FCallback";
+        String postParameter = "grant_type=authorization_code&code="+o2a.code+
+                "&client_id=myKey&client_secret=invalidSecret&state=xyz&redirect_uri=http%3A%2F%2Flocalhost%2FCookieJar%2FCallback";
         HttpTester request = new HttpTester();
         HttpTester response = new HttpTester();
-        request.setMethod("GET");
+        request.setMethod("POST");
         request.setHeader("Host","server.example.com");
-        request.setURI("/test/authorize"+"?"+queryParameter);
+        request.setURI("/test/token");
         request.setVersion("HTTP/1.1");
+        request.setHeader("Content-Type","application/x-www-form-urlencoded;charset=UTF-8");
+        request.setContent(postParameter);
 
         response.parse(tester.getResponses(request.generate()));
 
-        assertEquals(302,response.getStatus());
-        assertEquals("http://localhost/CookieJar/Callback?error=invalid_client&state=xyz",response.getHeader("location"));
+        assertEquals(401,response.getStatus());
+        assertEquals("{\"error\":\"invalid_client\"}",response.getContent());
 
     }
+/*
+	
+	public void testGetAccessor() throws Exception {
+    	OAuth2Client o2c = new OAuth2Client("https://client.example.com/cb","s6BhdRkqt3","gX1fBat3bV");
+    	OAuth2Accessor o2a = new OAuth2Accessor(o2c);
+        
+        SampleOAuth2Provider.generateCode(o2a);
+        String parameters = "grant_type=authorization_code&client_id=s6BhdRkqt3&client_secret=invalid&code="+o2a.code+"&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb";
+        OAuth2Message msg = new OAuth2Message("", "", decodeForm(parameters));
+        
+        OAuth2Accessor cachedAccessor = SampleOAuth2Provider.getAccessor(msg);
+        assertSame(o2a, cachedAccessor);
+    }
     
-
+    public void testGenerateCode() throws Exception {
+    	OAuth2Client o2c = new OAuth2Client("https://client.example.com/cb","s6BhdRkqt3","gX1fBat3bV");
+    	OAuth2Accessor o2a = new OAuth2Accessor(o2c);
+        
+        SampleOAuth2Provider.generateCode(o2a);
+        assertNotNull(o2a.code);
+    }*/
     /*public void testClientIdWithInvalidPassword() throws Exception {
     	OAuth2Client o2c = new OAuth2Client("https://client.example.com/cb","s6BhdRkqt3","gX1fBat3bV");
     	OAuth2Accessor o2a = new OAuth2Accessor(o2c);

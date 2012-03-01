@@ -25,10 +25,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.oauth.v2.OAuth2;
-import net.oauth.v2.OAuth2Accessor;
-import net.oauth.v2.OAuth2Message;
-import net.oauth.v2.OAuth2ProblemException;
+import net.oauth.v2.*;
 import net.oauth.v2.example.provider.core.SampleOAuth2Provider;
 import net.oauth.v2.server.OAuth2Servlet;
 
@@ -67,6 +64,7 @@ public class AccessTokenServlet2 extends HttpServlet {
             	accessor = SampleOAuth2Provider.getAccessorByCode(requestMessage);
             }else if (grant_type.equals(OAuth2.GrantType.REFRESH_TOKEN)){
             	accessor = SampleOAuth2Provider.getAccessorByRefreshToken(requestMessage);
+
             }else{
             	OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.UNSUPPORTED_GRANT_TYPE);
             	throw problem;
@@ -85,6 +83,14 @@ public class AccessTokenServlet2 extends HttpServlet {
                 if(accessor.accessToken==null) SampleOAuth2Provider.generateAccessAndRefreshToken(accessor);
             }else if (grant_type.equals(OAuth2.GrantType.REFRESH_TOKEN)){
             	SampleOAuth2Provider.generateAccessAndRefreshToken(accessor);
+            }else if (grant_type.equals(OAuth2.GrantType.PASSWORD)){
+                OAuth2Client client = SampleOAuth2Provider.getClient(requestMessage);
+                accessor = new OAuth2Accessor(client);
+                SampleOAuth2Provider.generateAccessAndRefreshToken(accessor);
+            }else if (grant_type.equals(OAuth2.GrantType.CLIENT_CREDENTIALS)){
+                OAuth2Client client = SampleOAuth2Provider.getClient(requestMessage);
+                accessor = new OAuth2Accessor(client);
+                SampleOAuth2Provider.generateAccessAndRefreshToken(accessor);
             }
             
             response.setContentType("application/json");
@@ -94,6 +100,7 @@ public class AccessTokenServlet2 extends HttpServlet {
             //                 out);
             
             OAuth2.formEncodeInJson(OAuth2.newList(OAuth2.ACCESS_TOKEN, accessor.accessToken,
+                                                  OAuth2.TOKEN_TYPE, accessor.tokenType,
             								      OAuth2.EXPIRES_IN, "3600",
             								      OAuth2.REFRESH_TOKEN, accessor.refreshToken), out);
             // send response back with JSON
@@ -103,6 +110,7 @@ public class AccessTokenServlet2 extends HttpServlet {
         	// sendback without Authorization Header
         	// sendback json
         	Boolean sendBodyInJson = true;
+            // TODO If it is the failure of client authentication, "withAuthHeader" will be true.
             Boolean withAuthHeader = false;
             SampleOAuth2Provider.handleException(e, request, response, sendBodyInJson, withAuthHeader);
         }

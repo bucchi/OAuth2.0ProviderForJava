@@ -232,6 +232,7 @@ public class SampleOAuth2Provider {
         ALL_TOKENS.remove(accessor);
         
         accessor.accessToken = accessToken;
+        accessor.tokenType = "bearer";
         accessor.refreshToken = refreshToken;
         
         // update token in local cache

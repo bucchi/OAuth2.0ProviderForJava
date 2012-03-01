@@ -63,7 +63,7 @@ public class OAuth2ValidatorTest extends TestCase {
         try {
             validator.validateClientIdWithPassword(msg,o2a);
         } catch (OAuth2ProblemException expected) {
-        	assertEquals(OAuth2.Problems.CLIENT_SECRET_MISMATCH, expected.getProblem());
+        	assertEquals(OAuth2.ErrorCode.INVALID_CLIENT, expected.getProblem());
         	assertEquals("unauthorized_client", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.CLIENT_SECRET_MISMATCH));
         }
     }
@@ -117,20 +117,34 @@ public class OAuth2ValidatorTest extends TestCase {
         try {
             validator.validateRedirectUri(msg,o2c);
         } catch (OAuth2ProblemException expected) {
-        	assertEquals(OAuth2.Problems.REDIRECT_URI_MISMATCH, expected.getProblem());
-        	assertEquals("redirect_uri_mismatch", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.REDIRECT_URI_MISMATCH));
+        	assertEquals(OAuth2.ErrorCode.INVALID_REQUEST, expected.getProblem());
+        	//assertEquals("redirect_uri_mismatch", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.REDIRECT_URI_MISMATCH));
         }
     }
-    
+
+
+    public void testInvalidScope() throws Exception {
+        OAuth2Client o2c = new OAuth2Client("https://client.example.com/case/invalid","s6BhdRkqt3","gX1fBat3bV");
+        String parameters = "grant_type=authorization_code&client_id=s6BhdRkqt3&scope=invalid&code=i1WsRn1uB1&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb";
+        OAuth2Message msg = new OAuth2Message("", "", decodeForm(parameters));
+        try {
+            validator.validateScope(msg,o2c);
+        } catch (OAuth2ProblemException expected) {
+            assertEquals(OAuth2.ErrorCode.INVALID_SCOPE, expected.getProblem());
+            //assertEquals("redirect_uri_mismatch", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.REDIRECT_URI_MISMATCH));
+        }
+    }
+
     public void testNoResponseType() throws Exception {
     	String parameters = "client_id=s6BhdRkqt3&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb";
         OAuth2Message msg = new OAuth2Message("", "", decodeForm(parameters));
         try {
             validator.validateResponseType(msg);
         } catch (OAuth2ProblemException expected) {
-            assertEquals(OAuth2.Problems.PARAMETER_ABSENT, expected.getProblem());
-        	assertEquals("invalid_request", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.PARAMETER_ABSENT));
-        	assertEquals("response_type", (String) expected.getParameters().get("parameter_name"));
+            //assertEquals(OAuth2.Problems.PARAMETER_ABSENT, expected.getProblem());
+        	//assertEquals("invalid_request", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.PARAMETER_ABSENT));
+        	//assertEquals("response_type", (String) expected.getParameters().get("parameter_name"));
+            assertEquals("invalid_request", expected.getProblem());
         }
     }
     

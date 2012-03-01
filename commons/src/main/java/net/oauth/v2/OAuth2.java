@@ -158,7 +158,7 @@ public class OAuth2 {
             map.put(Problems.PARAMETER_ABSENT, badRequest);
             map.put(Problems.TOKEN_EXPIRED, unauthorized);
 
-            //map.put(Problems.VERSION_REJECTED, badRequest);
+            map.put(OAuth2.ErrorCode.INVALID_CLIENT, unauthorized);
             //map.put(Problems.PARAMETER_REJECTED, badRequest);
             //map.put(Problems.TIMESTAMP_REFUSED, badRequest);
             //map.put(Problems.SIGNATURE_METHOD_REJECTED, badRequest);
