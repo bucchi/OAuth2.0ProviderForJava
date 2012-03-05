@@ -22,6 +22,8 @@ import java.net.URLDecoder;
 
 import junit.framework.TestCase;
 
+import org.apache.commons.codec.binary.Base64;
+
 /**
  * @author Yutaka Obuchi
  */
@@ -94,6 +96,80 @@ public class OAuth2ValidatorTest extends TestCase {
         	assertEquals(OAuth2.Problems.PARAMETER_ABSENT, expected.getProblem());
         	assertEquals("invalid_request", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.PARAMETER_ABSENT));
         	assertEquals("client_secret", (String) expected.getParameters().get("parameter_name"));
+        }
+    }
+
+    public void testValidateBasicAuthentication() throws Exception {
+        OAuth2Client o2c = new OAuth2Client("https://client.example.com/cb","s6BhdRkqt3","gX1fBat3bV");
+        OAuth2Accessor o2a = new OAuth2Accessor(o2c);
+
+        String parameters = "grant_type=authorization_code&code=i1WsRn1uB1&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb";
+        OAuth2Message msg = new OAuth2Message("", "", decodeForm(parameters));
+        List<Map.Entry<String, String>> headers = msg.getHeaders();
+        String userPass = new String(Base64.encodeBase64("s6BhdRkqt3:7Fjfp0ZBr1KtDRbnfVdmIw".getBytes()), "UTF-8");
+        headers.add(new OAuth2.Parameter("Authorization", "Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW"));
+        try {
+            validator.validateBasicAuthentication(msg,o2a);
+        } catch (OAuth2ProblemException expected) {
+            fail();
+        }
+    }
+
+
+    /*
+    * Basic Client Authnetication: invalid password
+    */
+    public void testValidateErrorBasicAuthentication1() throws Exception {
+        OAuth2Client o2c = new OAuth2Client("https://client.example.com/cb","s6BhdRkqt3","gX1fBat3bV");
+        OAuth2Accessor o2a = new OAuth2Accessor(o2c);
+
+        String parameters = "grant_type=authorization_code&code=i1WsRn1uB1&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb";
+        OAuth2Message msg = new OAuth2Message("", "", decodeForm(parameters));
+        List<Map.Entry<String, String>> headers = msg.getHeaders();
+        String userPass = new String(Base64.encodeBase64("s6BhdRkqt3:7Fjfp0ZBr1KtDRbnfVdmIw".getBytes()), "UTF-8");
+        headers.add(new OAuth2.Parameter("Authorization", "Basic "+userPass));
+        try {
+            validator.validateBasicAuthentication(msg,o2a);
+        } catch (OAuth2ProblemException expected) {
+            assertEquals(OAuth2.ErrorCode.INVALID_CLIENT, expected.getProblem());
+        }
+    }
+
+    /*
+     * Basic Client Authnetication: invalid userid
+     */
+    public void testValidateErrorBasicAuthentication2() throws Exception {
+        OAuth2Client o2c = new OAuth2Client("https://client.example.com/cb","s6BhdRkqt3","gX1fBat3bV");
+        OAuth2Accessor o2a = new OAuth2Accessor(o2c);
+
+        String parameters = "grant_type=authorization_code&code=i1WsRn1uB1&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb";
+        OAuth2Message msg = new OAuth2Message("", "", decodeForm(parameters));
+        List<Map.Entry<String, String>> headers = msg.getHeaders();
+        String userPass = new String(Base64.encodeBase64("AAAAAAAAA:gX1fBat3bV".getBytes()), "UTF-8");
+        headers.add(new OAuth2.Parameter("Authorization", "Basic "+userPass));
+        try {
+            validator.validateBasicAuthentication(msg,o2a);
+        } catch (OAuth2ProblemException expected) {
+            assertEquals(OAuth2.ErrorCode.INVALID_CLIENT, expected.getProblem());
+        }
+    }
+
+    /*
+     * Basic Client Authnetication: format error(userid+password)
+     */
+    public void testValidateErrorBasicAuthentication3() throws Exception {
+        OAuth2Client o2c = new OAuth2Client("https://client.example.com/cb","s6BhdRkqt3","gX1fBat3bV");
+        OAuth2Accessor o2a = new OAuth2Accessor(o2c);
+
+        String parameters = "grant_type=authorization_code&code=i1WsRn1uB1&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb";
+        OAuth2Message msg = new OAuth2Message("", "", decodeForm(parameters));
+        List<Map.Entry<String, String>> headers = msg.getHeaders();
+        String userPass = new String(Base64.encodeBase64("AAAAAAAAA+gX1fBat3bV".getBytes()), "UTF-8");
+        headers.add(new OAuth2.Parameter("Authorization", "Basic "+userPass));
+        try {
+            validator.validateBasicAuthentication(msg,o2a);
+        } catch (OAuth2ProblemException expected) {
+            assertEquals(OAuth2.ErrorCode.INVALID_CLIENT, expected.getProblem());
         }
     }
 
