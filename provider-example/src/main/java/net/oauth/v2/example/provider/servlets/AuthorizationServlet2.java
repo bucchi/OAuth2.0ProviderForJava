@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Yutaka Obuchi
+ * Copyright 2010,2011.2012 Yutaka Obuchi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package net.oauth.v2.example.provider.servlets;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -26,12 +28,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.oauth.v2.OAuth2;
+import net.oauth.v2.OAuth2.Parameter;
 import net.oauth.v2.OAuth2Accessor;
 import net.oauth.v2.OAuth2Client;
 import net.oauth.v2.OAuth2Message;
 import net.oauth.v2.OAuth2ProblemException;
-import net.oauth.v2.example.provider.core.SampleOAuth2Provider;
 import net.oauth.v2.server.OAuth2Servlet;
+
+
+import net.oauth.v2.example.provider.core.SampleOAuth2Provider;
 
 /**
  * Autherization request handler for OAuth2.0.
@@ -63,15 +68,8 @@ public class AuthorizationServlet2 extends HttpServlet {
             
             SampleOAuth2Provider.VALIDATOR.validateRequestMessageForAuthorization(requestMessage,client);
             
-            //OAuth2Accessor accessor = new OAuth2Accessor(client);
-            //OAuthAccessor accessor = SampleOAuth2Provider.getAccessor(requestMessage);
-           
-            //if (Boolean.TRUE.equals(accessor.getProperty("authorized"))) {
-                // already authorized send the user back
-            //    returnToConsumer(request, response, accessor);
-            //} else {
-                sendToAuthorizePage(request, response, client);
-            //}
+            sendToAuthorizePage(request, response, client);
+
         
         } catch (Exception e){
             Boolean sendBodyInJson = false;
@@ -100,7 +98,6 @@ public class AuthorizationServlet2 extends HttpServlet {
         try{
             OAuth2Message requestMessage = OAuth2Servlet.getMessage(request, null);
             
-            //OAuth2Accessor accessor = SampleOAuth2Provider.getAccessor(requestMessage);
             OAuth2Client client = SampleOAuth2Provider.getClient(requestMessage);
             
             String userId = request.getParameter("userId");
@@ -113,9 +110,39 @@ public class AuthorizationServlet2 extends HttpServlet {
             
             // set userId in accessor and mark it as authorized
             SampleOAuth2Provider.markAsAuthorized(accessor, userId);
-        	SampleOAuth2Provider.generateCode(accessor);
+
+
+            String requested = requestMessage.getParameter(OAuth2.RESPONSE_TYPE);
+            if (requested.equals(OAuth2.ResponseType.CODE)) {
+                SampleOAuth2Provider.generateCode(accessor);
+                returnToConsumer(request, response, accessor);
+            }else if (requested.equals(OAuth2.ResponseType.TOKEN)){
+                // generate refresh token here but do not send back that
+                SampleOAuth2Provider.generateAccessAndRefreshToken(accessor);
+                String redirect_uri = request.getParameter(OAuth2.REDIRECT_URI);
+                String state = request.getParameter(OAuth2.STATE);
+                
+                List<Parameter> list = new ArrayList<Parameter>(5);
+                list.add(new Parameter(OAuth2.ACCESS_TOKEN,accessor.accessToken));
+                list.add(new Parameter(OAuth2.TOKEN_TYPE,accessor.tokenType));
+                list.add(new Parameter(OAuth2.EXPIRES_IN,"3600"));
+                if(accessor.scope!=null) list.add(new Parameter(OAuth2.SCOPE,accessor.scope));
+                if(state != null){
+                    list.add(new Parameter(OAuth2.STATE, state));
+                }
+                
+                redirect_uri = OAuth2.addParametersAsFragment(redirect_uri,list);
+                response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
+                response.setHeader("Location", OAuth2.decodePercent(redirect_uri));
+
+            }else if (requested.equals(OAuth2.ResponseType.CODE_AND_TOKEN)){
+                //TODO
+            }else{
+                //TODO
+            }
+
             
-            returnToConsumer(request, response, accessor);
+
             
         } catch (Exception e){
             Boolean sendBodyInJson = false;
@@ -155,37 +182,11 @@ public class AuthorizationServlet2 extends HttpServlet {
     throws IOException, ServletException{
         // send the user back to site's callBackUrl
         String redirect_uri = request.getParameter(OAuth2.REDIRECT_URI);
-        //if("none".equals(callback) 
-        //    && accessor.consumer.callbackURL != null 
-        //        && accessor.consumer.callbackURL.length() > 0){
-            // first check if we have something in our properties file
-        //    callback = accessor.consumer.callbackURL;
-        //}
-        //generate code and set it to accessor
-        //if( "none".equals(callback) ) {
-            // no call back it must be a client
-       //     response.setContentType("text/plain");
-       //     PrintWriter out = response.getWriter();
-       //     out.println("You have successfully authorized '" 
-       //             + accessor.consumer.getProperty("description") 
-       //             + "'. Please close this browser window and click continue"
-       //             + " in the client.");
-       //     out.close();
-       // } else {
-            // if callback is not passed in, use the callback from config
-            //if(redirect_uri == null || redirect_uri.length() <=0 ){
-                //callback = accessor.consumer.callbackURL;
-                //String token = accessor.requestToken;
-            	
-            	// send back error
-            //}else{
-            //if (token != null) {
-                redirect_uri = OAuth2.addParameters(redirect_uri, OAuth2.CODE, accessor.code);
-            //}
-            //}
-            response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
-            response.setHeader("Location", redirect_uri);
-        //}
+
+
+        response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
+        response.setHeader("Location", OAuth2.decodePercent(redirect_uri));
+
     }
 
     private static final long serialVersionUID = 1L;
