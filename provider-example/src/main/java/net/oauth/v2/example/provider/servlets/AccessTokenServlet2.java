@@ -18,6 +18,9 @@ package net.oauth.v2.example.provider.servlets;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -64,33 +67,53 @@ public class AccessTokenServlet2 extends HttpServlet {
             	accessor = SampleOAuth2Provider.getAccessorByCode(requestMessage);
             }else if (grant_type.equals(OAuth2.GrantType.REFRESH_TOKEN)){
             	accessor = SampleOAuth2Provider.getAccessorByRefreshToken(requestMessage);
-
+            }else if (grant_type.equals(OAuth2.GrantType.PASSWORD)){
+                OAuth2Client client = SampleOAuth2Provider.getClientFromAuthHeader(requestMessage);
+                accessor = new OAuth2Accessor(client);
+            }else if (grant_type.equals(OAuth2.GrantType.CLIENT_CREDENTIALS)){
+                OAuth2Client client = SampleOAuth2Provider.getClientFromAuthHeader(requestMessage);
+                accessor = new OAuth2Accessor(client);
             }else{
-            	OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.UNSUPPORTED_GRANT_TYPE);
+            	OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.UNSUPPORTED_GRANT_TYPE);
             	throw problem;
             }
             
             SampleOAuth2Provider.VALIDATOR.validateRequestMessageForAccessToken(requestMessage, accessor);
             
-            // make sure code is authorized
-            if (!Boolean.TRUE.equals(accessor.getProperty("authorized"))) {
-                 OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.NOT_MARKED_AS_AUTHORIZED);
-                throw problem;
-            }
-            
             // generate access token and secret
             if(grant_type.equals(OAuth2.GrantType.AUTHORIZATION_CODE)){
+                // make sure code is authorized
+                if (!Boolean.TRUE.equals(accessor.getProperty("authorized"))) {
+                    OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.NOT_MARKED_AS_AUTHORIZED);
+                    throw problem;
+                }
                 if(accessor.accessToken==null) SampleOAuth2Provider.generateAccessAndRefreshToken(accessor);
             }else if (grant_type.equals(OAuth2.GrantType.REFRESH_TOKEN)){
+                // make sure code is authorized
+                if (!Boolean.TRUE.equals(accessor.getProperty("authorized"))) {
+                    OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.NOT_MARKED_AS_AUTHORIZED);
+                    throw problem;
+                }
             	SampleOAuth2Provider.generateAccessAndRefreshToken(accessor);
             }else if (grant_type.equals(OAuth2.GrantType.PASSWORD)){
-                OAuth2Client client = SampleOAuth2Provider.getClient(requestMessage);
-                accessor = new OAuth2Accessor(client);
+                // check if username and password are valid.
+                String username = requestMessage.getParameter(OAuth2.USERNAME);
+                String password = requestMessage.getParameter(OAuth2.PASSWORD);
+                if(username == null || password == null){
+                    OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_GRANT);
+                    throw problem;
+                } else {
+                    // do Authentication here
+                    if(username.equals("invalid")){
+                        OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_GRANT);
+                        throw problem;
+                    }
+                }
                 SampleOAuth2Provider.generateAccessAndRefreshToken(accessor);
             }else if (grant_type.equals(OAuth2.GrantType.CLIENT_CREDENTIALS)){
-                OAuth2Client client = SampleOAuth2Provider.getClient(requestMessage);
-                accessor = new OAuth2Accessor(client);
                 SampleOAuth2Provider.generateAccessAndRefreshToken(accessor);
+                // In client credential garant type flow, a refresh token should not be included into response.
+                accessor.refreshToken = null;
             }
             
             response.setContentType("application/json");
@@ -98,11 +121,16 @@ public class AccessTokenServlet2 extends HttpServlet {
             //OAuth.formEncode(OAuth.newList("oauth_token", accessor.accessToken,
             //                               "oauth_token_secret", accessor.tokenSecret),
             //                 out);
-            
-            OAuth2.formEncodeInJson(OAuth2.newList(OAuth2.ACCESS_TOKEN, accessor.accessToken,
-                                                  OAuth2.TOKEN_TYPE, accessor.tokenType,
-            								      OAuth2.EXPIRES_IN, "3600",
-            								      OAuth2.REFRESH_TOKEN, accessor.refreshToken), out);
+            if(accessor.refreshToken != null){
+                OAuth2.formEncodeInJson(OAuth2.newList(OAuth2.ACCESS_TOKEN, accessor.accessToken,
+                                                       OAuth2.TOKEN_TYPE, accessor.tokenType,
+            								           OAuth2.EXPIRES_IN, "3600",
+            								           OAuth2.REFRESH_TOKEN, accessor.refreshToken), out);
+            }else{
+                OAuth2.formEncodeInJson(OAuth2.newList(OAuth2.ACCESS_TOKEN, accessor.accessToken,
+                                        OAuth2.TOKEN_TYPE, accessor.tokenType,
+                                        OAuth2.EXPIRES_IN, "3600"),out);
+            }
             // send response back with JSON
             out.close();
             

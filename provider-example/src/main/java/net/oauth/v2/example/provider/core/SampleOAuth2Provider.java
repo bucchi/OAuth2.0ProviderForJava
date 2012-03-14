@@ -31,6 +31,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import net.oauth.v2.OAuth2;
@@ -103,7 +104,9 @@ public class SampleOAuth2Provider {
         }
         
     }
-
+    /*
+     * get client with the value of client_id parameter
+     */
     public static synchronized OAuth2Client getClient(
             OAuth2Message requestMessage)
             throws IOException, OAuth2ProblemException {
@@ -116,8 +119,6 @@ public class SampleOAuth2Provider {
         
         if(client == null) {
             OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_CLIENT);
-            // problem.setParameter(OAuth2.ERROR_DESCRIPTION,"The Client ID is not pre-registered.");
-            // problem.setParameter(OAuth2.ERROR_URI,http://example.com/error);
             if(requestMessage.getParameter(OAuth2.STATE)!=null){
             	problem.setParameter(OAuth2.STATE, requestMessage.getParameter(OAuth2.STATE));
             }
@@ -126,7 +127,45 @@ public class SampleOAuth2Provider {
         
         return client;
     }
-    
+
+    /*
+     * get client with the value of Authoraization header
+     */
+    public static synchronized OAuth2Client getClientFromAuthHeader(
+            OAuth2Message requestMessage)
+            throws IOException, OAuth2ProblemException {
+
+        OAuth2Client client = null;
+        // try to load from local cache if not throw exception
+        String authz = requestMessage.getHeader("Authorization");
+        if (authz != null) {
+            if(authz.substring(0,5).equals("Basic")){
+                String userPass = new String(Base64.decodeBase64(authz.substring(6).getBytes()), "UTF-8");
+
+                int loc = userPass.indexOf(":");
+                if (loc == -1) {
+                    OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_CLIENT);
+                    throw problem;
+                }
+
+                String userPassedIn = userPass.substring(0, loc);
+                String user = userPassedIn;
+                String pass = userPass.substring(loc + 1);
+                if(user!=null && pass!=null){
+                    client = SampleOAuth2Provider.ALL_CLIENTS.get(user);
+
+
+                }
+            }
+        }
+        if(client == null) {
+            OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_CLIENT);
+            throw problem;
+        }
+
+        return client;
+    }
+
     /**
      * Get the access token and token secret for the given oauth_token. 
      */

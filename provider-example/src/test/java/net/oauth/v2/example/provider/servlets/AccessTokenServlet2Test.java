@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.net.URLDecoder;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import junit.framework.TestCase;
 import com.meterware.servletunit.*;
@@ -260,6 +262,126 @@ public class AccessTokenServlet2Test extends TestCase {
         request.setVersion("HTTP/1.1");
         request.setHeader("Content-Type","application/x-www-form-urlencoded;charset=UTF-8");
         String userPass = new String(Base64.encodeBase64("myKey+mySecret".getBytes()), "UTF-8");
+        request.setHeader("Authorization", "Basic "+userPass);
+        request.setContent(postParameter);
+
+        response.parse(tester.getResponses(request.generate()));
+
+        assertEquals(401,response.getStatus());
+        assertEquals("{\"error\":\"invalid_client\"}",response.getContent());
+
+    }
+
+    /*
+     * Client Password grant
+     */
+    public void testDoPost7() throws Exception {
+
+        try{
+        ServletTester tester=new ServletTester();
+        tester.setContextPath("/test");
+        tester.addServlet(AccessTokenServlet2.class, "/token");
+        tester.start();
+
+        String postParameter = "grant_type=password&username=yutaka&password=obuchi";
+        HttpTester request = new HttpTester();
+        HttpTester response = new HttpTester();
+        request.setMethod("POST");
+        request.setHeader("Host","server.example.com");
+        request.setURI("/test/token");
+        request.setVersion("HTTP/1.1");
+        request.setHeader("Content-Type","application/x-www-form-urlencoded;charset=UTF-8");
+        String userPass = new String(Base64.encodeBase64("myKey:mySecret".getBytes()), "UTF-8");
+        request.setHeader("Authorization", "Basic "+userPass);
+        request.setContent(postParameter);
+
+        response.parse(tester.getResponses(request.generate()));
+        System.out.println("yutaka"+response.getContent());
+        assertEquals(200,response.getStatus());
+        Pattern pattern = Pattern.compile("\\{\"access_token\":\".+\",\"token_type\":\"bearer\",\"expires_in\":\"3600\",\"refresh_token\":\".+\"\\}");
+        Matcher matcher = pattern.matcher(response.getContent());
+        assertTrue(matcher.matches());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void testDoPost8() throws Exception {
+
+
+        ServletTester tester=new ServletTester();
+        tester.setContextPath("/test");
+        tester.addServlet(AccessTokenServlet2.class, "/token");
+        tester.start();
+
+        String postParameter = "grant_type=password&username=invalid&obuchi";
+        HttpTester request = new HttpTester();
+        HttpTester response = new HttpTester();
+        request.setMethod("POST");
+        request.setHeader("Host","server.example.com");
+        request.setURI("/test/token");
+        request.setVersion("HTTP/1.1");
+        request.setHeader("Content-Type","application/x-www-form-urlencoded;charset=UTF-8");
+        String userPass = new String(Base64.encodeBase64("myKey:invalidSecret".getBytes()), "UTF-8");
+        request.setHeader("Authorization", "Basic "+userPass);
+        request.setContent(postParameter);
+
+        response.parse(tester.getResponses(request.generate()));
+
+        assertEquals(401,response.getStatus());
+        assertEquals("{\"error\":\"invalid_client\"}",response.getContent());
+
+    }
+
+    /*
+     * Client Credentials grant
+     */
+    public void testDoPost9() throws Exception {
+
+
+        ServletTester tester=new ServletTester();
+        tester.setContextPath("/test");
+        tester.addServlet(AccessTokenServlet2.class, "/token");
+        tester.start();
+
+        String postParameter = "grant_type=client_credentials";
+        HttpTester request = new HttpTester();
+        HttpTester response = new HttpTester();
+        request.setMethod("POST");
+        request.setHeader("Host","server.example.com");
+        request.setURI("/test/token");
+        request.setVersion("HTTP/1.1");
+        request.setHeader("Content-Type","application/x-www-form-urlencoded;charset=UTF-8");
+        String userPass = new String(Base64.encodeBase64("myKey:mySecret".getBytes()), "UTF-8");
+        request.setHeader("Authorization", "Basic "+userPass);
+        request.setContent(postParameter);
+
+        response.parse(tester.getResponses(request.generate()));
+
+        assertEquals(200,response.getStatus());
+        Pattern pattern = Pattern.compile("\\{\"access_token\":\".+\",\"token_type\":\"bearer\",\"expires_in\":\"3600\"\\}");
+        Matcher matcher = pattern.matcher(response.getContent());
+        assertTrue(matcher.matches());
+
+    }
+
+    public void testDoPost10() throws Exception {
+
+
+        ServletTester tester=new ServletTester();
+        tester.setContextPath("/test");
+        tester.addServlet(AccessTokenServlet2.class, "/token");
+        tester.start();
+
+        String postParameter = "grant_type=client_credentials";
+        HttpTester request = new HttpTester();
+        HttpTester response = new HttpTester();
+        request.setMethod("POST");
+        request.setHeader("Host","server.example.com");
+        request.setURI("/test/token");
+        request.setVersion("HTTP/1.1");
+        request.setHeader("Content-Type","application/x-www-form-urlencoded;charset=UTF-8");
+        String userPass = new String(Base64.encodeBase64("myKey:invalidSecret".getBytes()), "UTF-8");
         request.setHeader("Authorization", "Basic "+userPass);
         request.setContent(postParameter);
 
