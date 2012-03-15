@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Yutaka Obuchi
+ * Copyright 2010,2011,2012 Yutaka Obuchi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -45,7 +44,7 @@ import net.oauth.v2.SimpleOAuth2Validator;
 import net.oauth.v2.server.OAuth2Servlet;
 
 /**
- * Utility methods for providers that store consumers, tokens and secrets in 
+ * Utility methods for providers that store clients, tokens as Accessor object in
  * local cache (HashSet). Consumer key is used as the name, and its credentials are 
  * stored in HashSet.
  *
@@ -62,6 +61,9 @@ public class SampleOAuth2Provider {
 
     private static Properties consumerProperties = null;
 
+    /*
+     * load clients data from properties file
+     */
     public static synchronized void loadConsumers() throws IOException {
         Properties p = consumerProperties;
         if (p == null) {
@@ -167,7 +169,7 @@ public class SampleOAuth2Provider {
     }
 
     /**
-     * Get the access token and token secret for the given oauth_token. 
+     * Get the accessor for the given code.
      */
     public static synchronized OAuth2Accessor getAccessorByCode(OAuth2Message requestMessage)
             throws IOException, OAuth2ProblemException {
@@ -175,7 +177,7 @@ public class SampleOAuth2Provider {
         // try to load from local cache if not throw exception
         String code = requestMessage.getCode();
         if(code == null){
-        	OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.PARAMETER_ABSENT);       
+        	OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_REQUEST);
             throw problem;
         }
         OAuth2Accessor accessor = null;
@@ -189,23 +191,24 @@ public class SampleOAuth2Provider {
         }
         
         if(accessor == null){
-            OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.INVALID_CODE);
-            //problem.setParameter(OAuth2.ERROR,OAuth2.UNAUTHORIZED_CLIENT);
-            // problem.setParameter(OAuth2.ERROR_DESCRIPTION,"invalid code");
-            // problem.setParameter(OAuth2.ERROR_URI,http://example.com/error);        
+            OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_REQUEST);
+
             throw problem;
         }
         
         return accessor;
     }
 
+    /**
+     * Get the accessor for the given Refresh Token.
+     */
     public static synchronized OAuth2Accessor getAccessorByRefreshToken(OAuth2Message requestMessage)
     throws IOException, OAuth2ProblemException {
 
     	// try to load from local cache if not throw exception
     	String refreshToken = requestMessage.getParameter(OAuth2.REFRESH_TOKEN);
     	if(refreshToken == null){
-        	OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.PARAMETER_ABSENT);       
+        	OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_REQUEST);
             throw problem;
         }
     	OAuth2Accessor accessor = null;
@@ -229,7 +232,7 @@ public class SampleOAuth2Provider {
     	return accessor;
     }
     /**
-     * Set the access token 
+     * Set mark the accessor as authorized
      */
     public static synchronized void markAsAuthorized(OAuth2Accessor accessor, String userId)
             throws OAuth2Exception {
@@ -247,21 +250,20 @@ public class SampleOAuth2Provider {
     
 
     /**
-     * Generate a fresh request token and secret for a consumer.
+     * Generate an access token and fresh token.
      * 
-     * @throws OAuthException
+     * @throws OAuth2Exception
      */
     public static synchronized void generateAccessAndRefreshToken(OAuth2Accessor accessor)
             throws OAuth2Exception {
 
-        // generate oauth_token and oauth_secret
-        //String consumer_key = (String) accessor.client.getProperty("name");
+        // generate access token and refresh token
         String client_id = (String) accessor.client.clientId;
         String redirect_uri = (String) accessor.client.redirectUri;
         
-        // generate token and secret based on consumer_key
+
         
-        // for now use md5 of name + current time as token
+        // for now use md5 of client_id + current time as token
         String access_token_data = client_id + System.nanoTime();
         String accessToken = DigestUtils.md5Hex(access_token_data);
         
@@ -278,41 +280,37 @@ public class SampleOAuth2Provider {
         ALL_TOKENS.add(accessor);
     }
 
+    /*
+     * generate authorization code
+     */
     public static synchronized void generateCode(
             OAuth2Accessor accessor)
             throws OAuth2Exception {
 
-        // generate oauth_token and oauth_secret
+        // generate authorization code
         String client_id = (String) accessor.client.clientId;
-        // generate token and secret based on consumer_key
+
         
-        // for now use md5 of name + current time as token
+        // for now use md5 of client_id + current time as token
         String code_data = client_id + System.nanoTime();
         String code = DigestUtils.md5Hex(code_data);
-        // for now use md5 of name + current time + token as secret
-        //String secret_data = consumer_key + System.nanoTime() + token;
-        //String secret = DigestUtils.md5Hex(secret_data);
         
         accessor.code = code;
-        //accessor.tokenSecret = secret;
-        //accessor.accessToken = null;
         
         // add to the local cache
         ALL_TOKENS.add(accessor);
         
     }
-    
+
+    /*
+     * handle exceptions
+     */
     public static void handleException(Exception e, HttpServletRequest request,
             HttpServletResponse response, boolean sendBodyInJson, boolean withAuthHeader)
             throws IOException, ServletException {
     	
     	String realm = null;
-        
-    	//if(withAuthHeader){
-        //	realm = (request.isSecure())?"https://":"http://";
-        //	realm += request.getLocalName();
-        //}
-        
+
     	OAuth2Servlet.handleException(request, response, e, realm, sendBodyInJson, withAuthHeader); 
     }
     
