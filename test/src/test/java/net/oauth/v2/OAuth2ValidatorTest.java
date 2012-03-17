@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Yutaka Obuchi
+ * Copyright 2010,2011,2012 Yutaka Obuchi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,8 +52,7 @@ public class OAuth2ValidatorTest extends TestCase {
         try {
             validator.validateClientIdWithPassword(msg,o2a);
         } catch (OAuth2ProblemException expected) {
-            assertEquals(OAuth2.Problems.CLIENT_ID_MISMATCH, expected.getProblem());
-        	assertEquals("invalid_client", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.CLIENT_ID_MISMATCH));
+            assertEquals("invalid_client", expected.getProblem());
         }
     }
     public void testClientIdWithInvalidPassword() throws Exception {
@@ -78,9 +77,7 @@ public class OAuth2ValidatorTest extends TestCase {
         try {
             validator.validateClientIdWithPassword(msg,o2a);
         } catch (OAuth2ProblemException expected) {
-        	assertEquals(OAuth2.Problems.PARAMETER_ABSENT, expected.getProblem());
-        	assertEquals("invalid_request", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.PARAMETER_ABSENT));
-        	assertEquals("client_id", (String) expected.getParameters().get("parameter_name"));
+        	assertEquals("invalid_request", expected.getProblem());
         }
     }
     
@@ -93,9 +90,7 @@ public class OAuth2ValidatorTest extends TestCase {
         try {
             validator.validateClientIdWithPassword(msg,o2a);
         } catch (OAuth2ProblemException expected) {
-        	assertEquals(OAuth2.Problems.PARAMETER_ABSENT, expected.getProblem());
-        	assertEquals("invalid_request", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.PARAMETER_ABSENT));
-        	assertEquals("client_secret", (String) expected.getParameters().get("parameter_name"));
+        	assertEquals("invalid_request", expected.getProblem());
         }
     }
 
@@ -198,16 +193,54 @@ public class OAuth2ValidatorTest extends TestCase {
         }
     }
 
+    public void testValidScope() throws Exception {
+        OAuth2Client o2c = new OAuth2Client("https://client.example.com/case/invalid","s6BhdRkqt3","gX1fBat3bV");
+        OAuth2Accessor o2a = new OAuth2Accessor(o2c);
+        o2a.scope = "read";
+        String parameters = "grant_type=authorization_code&client_id=s6BhdRkqt3&scope=read&code=i1WsRn1uB1&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb";
+        OAuth2Message msg = new OAuth2Message("", "", decodeForm(parameters));
+        try {
+            validator.validateScope(msg,o2a);
+        } catch (OAuth2ProblemException expected) {
+            fail();
+        }
+    }
 
     public void testInvalidScope() throws Exception {
         OAuth2Client o2c = new OAuth2Client("https://client.example.com/case/invalid","s6BhdRkqt3","gX1fBat3bV");
+        OAuth2Accessor o2a = new OAuth2Accessor(o2c);
+        o2a.scope = "read";
         String parameters = "grant_type=authorization_code&client_id=s6BhdRkqt3&scope=invalid&code=i1WsRn1uB1&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb";
         OAuth2Message msg = new OAuth2Message("", "", decodeForm(parameters));
         try {
-            validator.validateScope(msg,o2c);
+            validator.validateScope(msg,o2a);
         } catch (OAuth2ProblemException expected) {
             assertEquals(OAuth2.ErrorCode.INVALID_SCOPE, expected.getProblem());
-            //assertEquals("redirect_uri_mismatch", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.REDIRECT_URI_MISMATCH));
+        }
+    }
+
+    public void testNoScope() throws Exception {
+        OAuth2Client o2c = new OAuth2Client("https://client.example.com/case/invalid","s6BhdRkqt3","gX1fBat3bV");
+        OAuth2Accessor o2a = new OAuth2Accessor(o2c);
+        o2a.scope = "read";
+        String parameters = "grant_type=authorization_code&client_id=s6BhdRkqt3&code=i1WsRn1uB1&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb";
+        OAuth2Message msg = new OAuth2Message("", "", decodeForm(parameters));
+        try {
+            validator.validateScope(msg,o2a);
+        } catch (OAuth2ProblemException expected) {
+            assertEquals(OAuth2.ErrorCode.INVALID_SCOPE, expected.getProblem());
+        }
+    }
+
+    public void testNoScope2() throws Exception {
+        OAuth2Client o2c = new OAuth2Client("https://client.example.com/case/invalid","s6BhdRkqt3","gX1fBat3bV");
+        OAuth2Accessor o2a = new OAuth2Accessor(o2c);
+        String parameters = "grant_type=authorization_code&client_id=s6BhdRkqt3&scope=something&code=i1WsRn1uB1&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb";
+        OAuth2Message msg = new OAuth2Message("", "", decodeForm(parameters));
+        try {
+            validator.validateScope(msg,o2a);
+        } catch (OAuth2ProblemException expected) {
+            assertEquals(OAuth2.ErrorCode.INVALID_SCOPE, expected.getProblem());
         }
     }
 
