@@ -31,7 +31,7 @@ public class OAuth2ValidatorTest extends TestCase {
 
     private long currentTimeMsec;
     private SimpleOAuth2Validator validator;
-    private static final Map<String, String> PROBLEM_TO_ERROR_CODE = OAuth2.Problems.TO_ERROR_CODE;
+    //private static final Map<String, String> PROBLEM_TO_ERROR_CODE = OAuth2.Problems.TO_ERROR_CODE;
 
 
     @Override
@@ -65,7 +65,6 @@ public class OAuth2ValidatorTest extends TestCase {
             validator.validateClientIdWithPassword(msg,o2a);
         } catch (OAuth2ProblemException expected) {
         	assertEquals(OAuth2.ErrorCode.INVALID_CLIENT, expected.getProblem());
-        	assertEquals("unauthorized_client", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.CLIENT_SECRET_MISMATCH));
         }
     }
     public void testNoClientId() throws Exception {
@@ -175,8 +174,8 @@ public class OAuth2ValidatorTest extends TestCase {
         try {
             validator.validateRedirectUri(msg,o2c);
         } catch (OAuth2ProblemException expected) {
-            assertEquals(OAuth2.Problems.PARAMETER_ABSENT, expected.getProblem());
-        	assertEquals("invalid_request", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.PARAMETER_ABSENT));
+            assertEquals("invalid_request", expected.getProblem());
+        	//assertEquals("invalid_request", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.PARAMETER_ABSENT));
         	assertEquals("redirect_uri", (String) expected.getParameters().get("parameter_name"));
         }
     }
@@ -263,8 +262,8 @@ public class OAuth2ValidatorTest extends TestCase {
         try {
             validator.validateResponseType(msg);
         } catch (OAuth2ProblemException expected) {
-            assertEquals(OAuth2.Problems.UNSUPPORTED_RESPONSE_TYPE, expected.getProblem());
-        	assertEquals("unsupported_response_type", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.UNSUPPORTED_RESPONSE_TYPE));
+            assertEquals(OAuth2.ErrorCode.UNSUPPORTED_RESPONSE_TYPE, expected.getProblem());
+        	//assertEquals("unsupported_response_type", PROBLEM_TO_ERROR_CODE.get(OAuth2.Problems.UNSUPPORTED_RESPONSE_TYPE));
         }
     }
 

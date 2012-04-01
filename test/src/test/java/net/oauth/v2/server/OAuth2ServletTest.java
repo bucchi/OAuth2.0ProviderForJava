@@ -51,7 +51,7 @@ public class OAuth2ServletTest extends TestCase
 		WebRequest request   = new PostMethodWebRequest( "https://test.meterware.com/myServlet" );
 		InvocationContext ic = sc.newInvocation( request );
 		
-        OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.UNSUPPORTED_RESPONSE_TYPE);
+        OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.UNSUPPORTED_RESPONSE_TYPE);
         // if you do not specify status code 200 here response does not inluce anything 
         problem.setParameter(OAuth2ProblemException.HTTP_STATUS_CODE,new Integer(200));
         HttpServletResponse hsr = ic.getResponse();
@@ -61,7 +61,7 @@ public class OAuth2ServletTest extends TestCase
     
         assertEquals("ErrorJSONResponse Body chcek", "{"+toStringWithQuotation("error")+":"+toStringWithQuotation("unsupported_response_type")+"}", response.getText());
         assertEquals("ErrorJSONResponse ContentType check", "application/json", response.getContentType()); 
-        
+
             
         
     }
@@ -74,7 +74,7 @@ public class OAuth2ServletTest extends TestCase
 		WebRequest request   = new PostMethodWebRequest( "https://test.meterware.com/myServlet" );
 		InvocationContext ic = sc.newInvocation( request );
 		
-        OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.UNSUPPORTED_RESPONSE_TYPE);
+        OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.UNSUPPORTED_RESPONSE_TYPE);
         problem.setParameter(OAuth2ProblemException.HTTP_STATUS_CODE,new Integer(302));
         problem.getParameters().put(OAuth2.REDIRECT_URI,"https://client.example.com/cb");
         HttpServletResponse hsr = ic.getResponse();

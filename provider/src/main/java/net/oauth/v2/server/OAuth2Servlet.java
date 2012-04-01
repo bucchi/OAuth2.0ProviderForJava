@@ -116,7 +116,7 @@ public class OAuth2Servlet {
             OAuth2ProblemException problem = (OAuth2ProblemException) e;
             Object httpCode = problem.getParameters().get(OAuth2ProblemException.HTTP_STATUS_CODE);
             if (httpCode == null) {
-                httpCode = PROBLEM_TO_HTTP_CODE.get(problem.getProblem());
+                httpCode = ERROR_TO_HTTP_CODE.get(problem.getProblem());
             }
             if (httpCode == null) {
                 httpCode = SC_FORBIDDEN;
@@ -184,9 +184,7 @@ public class OAuth2Servlet {
 
     private static final Integer SC_FORBIDDEN = new Integer(HttpServletResponse.SC_FORBIDDEN);
 
-    private static final Map<String, Integer> PROBLEM_TO_HTTP_CODE = OAuth2.Problems.TO_HTTP_CODE;
-
-    private static final Map<String, String> PROBLEM_TO_ERROR_CODE = OAuth2.Problems.TO_ERROR_CODE;
+    private static final Map<String, Integer> ERROR_TO_HTTP_CODE = OAuth2.ErrorCode.TO_HTTP_CODE;
 
     /** Send the given parameters as a form-encoded response body. */
     //public static void sendForm(HttpServletResponse response,
@@ -203,12 +201,7 @@ public class OAuth2Servlet {
         response.resetBuffer();
         response.setContentType("application/json" + ";charset="
                 + OAuth2.ENCODING);
-        //response.addHeader("X-YUTAKA", "OBUCHI");
-        //String res= "non";
-        //for (Map.Entry parameter : parameters) {
-        //	res +=(String)parameter.getKey()+(String)parameter.getValue();
-        //}
-        //response.addHeader("X-OBUCHI", res);
+
         OAuth2.formEncodeInJson(parameters, response.getOutputStream());
     }
     /**

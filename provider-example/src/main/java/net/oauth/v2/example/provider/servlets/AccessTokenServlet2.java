@@ -84,14 +84,14 @@ public class AccessTokenServlet2 extends HttpServlet {
             if(grant_type.equals(OAuth2.GrantType.AUTHORIZATION_CODE)){
                 // make sure code is authorized
                 if (!Boolean.TRUE.equals(accessor.getProperty("authorized"))) {
-                    OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.NOT_MARKED_AS_AUTHORIZED);
+                    OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_GRANT);
                     throw problem;
                 }
                 if(accessor.accessToken==null) SampleOAuth2Provider.generateAccessAndRefreshToken(accessor);
             }else if (grant_type.equals(OAuth2.GrantType.REFRESH_TOKEN)){
                 // make sure code is authorized
                 if (!Boolean.TRUE.equals(accessor.getProperty("authorized"))) {
-                    OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.NOT_MARKED_AS_AUTHORIZED);
+                    OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_GRANT);
                     throw problem;
                 }
             	SampleOAuth2Provider.generateAccessAndRefreshToken(accessor);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Yutaka Obuchi
+ * Copyright 2010,2011,2012 Yutaka Obuchi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,107 +98,6 @@ public class OAuth2 {
     //public static final String HMAC_SHA1 = "HMAC-SHA1";
     //public static final String RSA_SHA1 = "RSA-SHA1";
 
-    /**
-     * Strings used for <a href="http://wiki.oauth.net/ProblemReporting">problem
-     * reporting</a>.
-     */
-    public static class Problems {
-    	
-    	public static final String CLIENT_ID_UNKNOWN = "client_id_unknown";
-    	public static final String INVALID_TOKEN = "invalid_token";
-    	public static final String PARAMETER_ABSENT = "parameter_absent";
-    	public static final String CLIENT_ID_MISMATCH = "client_id_mismatch";
-    	public static final String CLIENT_SECRET_MISMATCH = "client_secret_mismatch";
-    	public static final String UNSUPPORTED_RESPONSE_TYPE = "unsupported_response_type";
-    	public static final String UNSUPPORTED_GRANT_TYPE = "unsupported_grant_type";
-    	public static final String REDIRECT_URI_MISMATCH = "redirect_uri_mismatch";
-    	public static final String INVALID_CODE = "invalid_code";
-    	public static final String NOT_MARKED_AS_AUTHORIZED = "not_marked_as_authorized";
-    	
-        public static final String VERSION_REJECTED = "version_rejected";
-        
-        //public static final String PARAMETER_REJECTED = "parameter_rejected";
-        //public static final String TIMESTAMP_REFUSED = "timestamp_refused";
-        //public static final String NONCE_USED = "nonce_used";
-        //public static final String SIGNATURE_METHOD_REJECTED = "signature_method_rejected";
-        //public static final String SIGNATURE_INVALID = "signature_invalid";
-        //public static final String CONSUMER_KEY_UNKNOWN = "consumer_key_unknown";
-        //public static final String CONSUMER_KEY_REJECTED = "consumer_key_rejected";
-        //public static final String CONSUMER_KEY_REFUSED = "consumer_key_refused";
-        //public static final String TOKEN_USED = "token_used";
-        public static final String TOKEN_EXPIRED = "token_expired";
-        //public static final String TOKEN_REVOKED = "token_revoked";
-        //public static final String TOKEN_REJECTED = "token_rejected";
-        //public static final String ADDITIONAL_AUTHORIZATION_REQUIRED = "additional_authorization_required";
-        //public static final String PERMISSION_UNKNOWN = "permission_unknown";
-        //public static final String PERMISSION_DENIED = "permission_denied";
-        //public static final String USER_REFUSED = "user_refused";
-
-        //public static final String OAUTH_ACCEPTABLE_VERSIONS = "oauth_acceptable_versions";
-        //public static final String OAUTH_ACCEPTABLE_TIMESTAMPS = "oauth_acceptable_timestamps";
-        //public static final String OAUTH_PARAMETERS_ABSENT = "oauth_parameters_absent";
-        //public static final String OAUTH_PARAMETERS_REJECTED = "oauth_parameters_rejected";
-        //public static final String OAUTH_PROBLEM_ADVICE = "oauth_problem_advice";
-
-        /**
-         * A map from an <a
-         * href="http://wiki.oauth.net/ProblemReporting">oauth_problem</a> value to
-         * the appropriate HTTP response code.
-         */
-        public static final Map<String, Integer> TO_HTTP_CODE = mapToHttpCode();
-
-        private static Map<String, Integer> mapToHttpCode() {
-            Integer badRequest = new Integer(400);
-            Integer unauthorized = new Integer(401);
-            Integer serviceUnavailable = new Integer(503);
-            Map<String, Integer> map = new HashMap<String, Integer>();
-
-            map.put(Problems.CLIENT_ID_UNKNOWN, unauthorized);
-            map.put(Problems.CLIENT_SECRET_MISMATCH, unauthorized);
-            map.put(Problems.PARAMETER_ABSENT, badRequest);
-            map.put(Problems.TOKEN_EXPIRED, unauthorized);
-
-            map.put(OAuth2.ErrorCode.INVALID_CLIENT, unauthorized);
-            //map.put(Problems.PARAMETER_REJECTED, badRequest);
-            //map.put(Problems.TIMESTAMP_REFUSED, badRequest);
-            //map.put(Problems.SIGNATURE_METHOD_REJECTED, badRequest);
-
-            //map.put(Problems.TOKEN_USED, unauthorized);
-            //map.put(Problems.TOKEN_REVOKED, unauthorized);
-            //map.put(Problems.TOKEN_REJECTED, unauthorized);
-            //map.put("token_not_authorized", unauthorized);
-            //map.put(Problems.SIGNATURE_INVALID, unauthorized);
-            //map.put(Problems.CONSUMER_KEY_UNKNOWN, unauthorized);
-            //map.put(Problems.CONSUMER_KEY_REJECTED, unauthorized);
-            //map.put(Problems.ADDITIONAL_AUTHORIZATION_REQUIRED, unauthorized);
-            //map.put(Problems.PERMISSION_UNKNOWN, unauthorized);
-            //map.put(Problems.PERMISSION_DENIED, unauthorized);
-
-            //map.put(Problems.USER_REFUSED, serviceUnavailable);
-            //map.put(Problems.CONSUMER_KEY_REFUSED, serviceUnavailable);
-            return Collections.unmodifiableMap(map);
-        }
-
-        public static final Map<String, String> TO_ERROR_CODE = mapToErrorCode();
-        
-        private static Map<String, String> mapToErrorCode() {
-            Map<String, String> map = new HashMap<String, String>();
-
-            map.put(Problems.CLIENT_ID_UNKNOWN, OAuth2.ErrorCode.INVALID_REQUEST);
-            map.put(Problems.UNSUPPORTED_RESPONSE_TYPE, OAuth2.ErrorCode.UNSUPPORTED_RESPONSE_TYPE);
-            map.put(Problems.UNSUPPORTED_GRANT_TYPE, OAuth2.ErrorCode.UNSUPPORTED_GRANT_TYPE);
-            map.put(Problems.REDIRECT_URI_MISMATCH, OAuth2.ErrorCode.REDIRECT_URI_MISMATCH);
-            map.put(Problems.INVALID_CODE, OAuth2.ErrorCode.INVALID_GRANT);
-            map.put(Problems.PARAMETER_ABSENT, OAuth2.ErrorCode.INVALID_REQUEST);
-            map.put(Problems.CLIENT_ID_MISMATCH, OAuth2.ErrorCode.INVALID_CLIENT);
-            map.put(Problems.CLIENT_SECRET_MISMATCH, OAuth2.ErrorCode.UNAUTHORIZED_CLIENT);
-            map.put(Problems.NOT_MARKED_AS_AUTHORIZED, OAuth2.ErrorCode.INVALID_GRANT);
-            return Collections.unmodifiableMap(map);
-        }
-        
-        
-    }
-    
     private static String characterEncoding = ENCODING;
 
     //public static void setCharacterEncoding(String encoding) {

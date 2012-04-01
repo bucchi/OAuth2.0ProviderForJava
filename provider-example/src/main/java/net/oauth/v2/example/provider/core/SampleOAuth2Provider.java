@@ -222,10 +222,8 @@ public class SampleOAuth2Provider {
     	}
 
     	if(accessor == null){
-    		OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.Problems.INVALID_TOKEN);
-    		problem.setParameter(OAuth2.ERROR,OAuth2.ErrorCode.INVALID_GRANT);
-    		// problem.setParameter(OAuth2.ERROR_DESCRIPTION,"invalid code");
-    		// problem.setParameter(OAuth2.ERROR_URI,http://example.com/error);        
+    		OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.INVALID_GRANT);
+
     		throw problem;
     	}
 
