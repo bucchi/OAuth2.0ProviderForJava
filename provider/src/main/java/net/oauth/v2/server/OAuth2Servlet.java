@@ -150,25 +150,32 @@ public class OAuth2Servlet {
                 sendFormInJson(response, sendBackErrorParameters);
             }else{
             	//send back error info as parameters to the redirection URI query component
-            	String redirect_uri = message.getParameter(OAuth2.REDIRECT_URI);
-
-                //ToDo maybe this part should be out of core code and be in example.
-                String response_type = message.getParameter(OAuth2.RESPONSE_TYPE);
-                if(response_type != null && response_type.equals(OAuth2.ResponseType.TOKEN)){
-                    redirect_uri = OAuth2.addParametersAsFragment(redirect_uri, OAuth2.ERROR, errorCode.toString());
-                } else {
-            	    redirect_uri = OAuth2.addParameters(redirect_uri, OAuth2.ERROR, errorCode.toString());
+            	//String redirect_uri = message.getParameter(OAuth2.REDIRECT_URI);
+                List<Map.Entry<String, String>> sendBackErrorParameters = new ArrayList<Map.Entry<String, String>>(SEND_BACK_ERROR_PARAMETERS.size());
+                for (Map.Entry parameter : message.getParameters()) {
+                    if(SEND_BACK_ERROR_PARAMETERS.contains(parameter.getKey()))
+                    {
+                        sendBackErrorParameters.add(parameter);
+                    }
                 }
+                String redirect_uri = constructErrorRedirectUri(message,sendBackErrorParameters);
+                //ToDo maybe this part should be out of core code and be in example.
+                //String response_type = message.getParameter(OAuth2.RESPONSE_TYPE);
+                //if(response_type != null && response_type.equals(OAuth2.ResponseType.TOKEN)){
+                //    redirect_uri = OAuth2.addParametersAsFragment(redirect_uri, OAuth2.ERROR, errorCode.toString());
+                //} else {
+            	//    redirect_uri = OAuth2.addParameters(redirect_uri, OAuth2.ERROR, errorCode.toString());
+                //}
 
-                if(problem.getParameters().get(OAuth2.ERROR_DESCRIPTION)!=null){
-            		redirect_uri = OAuth2.addParameters(redirect_uri, OAuth2.ERROR_DESCRIPTION, problem.getParameters().get(OAuth2.ERROR_DESCRIPTION).toString());
-            	}
-            	if(problem.getParameters().get(OAuth2.ERROR_URI) != null){
-            		redirect_uri = OAuth2.addParameters(redirect_uri, OAuth2.ERROR_URI, problem.getParameters().get(OAuth2.ERROR_URI).toString());
-            	}
-            	if(problem.getParameters().get(OAuth2.STATE) != null){
-            		redirect_uri = OAuth2.addParameters(redirect_uri, OAuth2.STATE, problem.getParameters().get(OAuth2.STATE).toString());
-            	}
+                //if(problem.getParameters().get(OAuth2.ERROR_DESCRIPTION)!=null){
+            	//	redirect_uri = OAuth2.addParameters(redirect_uri, OAuth2.ERROR_DESCRIPTION, problem.getParameters().get(OAuth2.ERROR_DESCRIPTION).toString());
+            	//}
+            	//if(problem.getParameters().get(OAuth2.ERROR_URI) != null){
+            	//	redirect_uri = OAuth2.addParameters(redirect_uri, OAuth2.ERROR_URI, problem.getParameters().get(OAuth2.ERROR_URI).toString());
+            	//}
+            	//if(problem.getParameters().get(OAuth2.STATE) != null){
+            	//	redirect_uri = OAuth2.addParameters(redirect_uri, OAuth2.STATE, problem.getParameters().get(OAuth2.STATE).toString());
+            	//}
             	response.addHeader(OAuth2ProblemException.HTTP_LOCATION,redirect_uri);
             }
         } else if (e instanceof IOException) {
@@ -239,4 +246,19 @@ public class OAuth2Servlet {
         return html.toString();
     }
 
+    public static String constructErrorRedirectUri(OAuth2Message message, Iterable<? extends Map.Entry<String, String>> parameters) throws IOException{
+
+        //send back error info as parameters to the redirection URI query component
+        String redirect_uri = message.getParameter(OAuth2.REDIRECT_URI);
+
+        //ToDo maybe this part should be out of core code and be in example.
+        String response_type = message.getParameter(OAuth2.RESPONSE_TYPE);
+        if(response_type != null && response_type.equals(OAuth2.ResponseType.TOKEN)){
+            redirect_uri = OAuth2.addParametersAsFragment(redirect_uri,parameters);
+        } else {
+            redirect_uri = OAuth2.addParameters(redirect_uri,parameters);
+        }
+
+        return redirect_uri;
+    }
 }
