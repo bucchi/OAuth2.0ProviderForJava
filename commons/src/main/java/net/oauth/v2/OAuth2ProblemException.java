@@ -36,6 +36,7 @@
 
 package net.oauth.v2;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -107,10 +108,11 @@ public class OAuth2ProblemException extends OAuth2Exception {
         return null;
     }
     public void setParameter(String name, Object value) {
-        getParameters().put(name, value);
+        //getParameters().put(name, value);
+        parameters.put(name, value);
     }
     public Map<String, Object> getParameters() {
-        return parameters;
+        return Collections.unmodifiableMap(parameters);
     }
 
     public String getProblem() {
