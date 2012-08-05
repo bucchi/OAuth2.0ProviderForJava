@@ -24,8 +24,7 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 import junit.framework.TestCase;
-import com.meterware.servletunit.*;
-import com.meterware.httpunit.*;
+
 import net.oauth.v2.*;
 import net.oauth.v2.example.provider.core.*;
 import net.oauth.v2.example.provider.servlets.AuthorizationServlet2;

@@ -69,10 +69,17 @@ public class OAuth2Test extends TestCase {
     };
     
     private static final String[] PARAMETERS =
-        // label, input, expected result
-        { "https://client.example.com/cb", "code=i1WsRn1uB1&expires_in=3600"//
-                , "https://client.example.com/cb?code=i1WsRn1uB1&expires_in=3600" //
-        };
+            // label, input, expected result
+            { "https://client.example.com/cb", "code=i1WsRn1uB1&expires_in=3600"//
+                    , "https://client.example.com/cb?code=i1WsRn1uB1&expires_in=3600" //
+            };
+
+    private static final String[] PARAMETERS4FRAGMENT =
+            // label, input, expected result
+            { "https://client.example.com/cb", "access_token=2YotnFZFEjr1zCsicMWpAA&state=xyz&token_type=example&expires_in=3600"//
+                    , "https://client.example.com/cb#access_token=2YotnFZFEjr1zCsicMWpAA&state=xyz&token_type=example&expires_in=3600" //
+            };
+
     // add callback URL
     
     public void testAddParameters() {
@@ -98,7 +105,36 @@ public class OAuth2Test extends TestCase {
         }
         assertEquals("String Parameter", PARAMETERS[2],result2);
     }
-    
+
+    public void testAddParametersAsFragment() {
+        String base = PARAMETERS4FRAGMENT[0];
+        List<OAuth2.Parameter> parameters = decodeForm(PARAMETERS4FRAGMENT[1]);
+        String result1 = null;
+        try{
+            result1 = OAuth2.addParametersAsFragment(base,parameters);
+        }catch(Exception e){
+
+        }
+        assertEquals("list Parameter", PARAMETERS4FRAGMENT[2],result1);
+
+        String result2 = null;
+        try{
+            String key1 = ((OAuth2.Parameter)parameters.get(0)).getKey();
+            String value1 = ((OAuth2.Parameter)parameters.get(0)).getValue();
+            String key2 = ((OAuth2.Parameter)parameters.get(1)).getKey();
+            String value2 = ((OAuth2.Parameter)parameters.get(1)).getValue();
+            String key3 = ((OAuth2.Parameter)parameters.get(2)).getKey();
+            String value3 = ((OAuth2.Parameter)parameters.get(2)).getValue();
+            String key4 = ((OAuth2.Parameter)parameters.get(3)).getKey();
+            String value4 = ((OAuth2.Parameter)parameters.get(3)).getValue();
+            result2 = OAuth2.addParametersAsFragment(base,key1,value1,key2,value2,key3,value3,key4,value4);
+        }catch(Exception e){
+
+        }
+        assertEquals("String Parameter", PARAMETERS4FRAGMENT[2],result2);
+    }
+
+
     public void testEncode() {
         StringBuffer errors = new StringBuffer();
         for (int c = 0; c < STANDARD.length; c += 3) {

@@ -23,8 +23,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import junit.framework.TestCase;
-import com.meterware.servletunit.*;
-import com.meterware.httpunit.*;
 import net.oauth.v2.*;
 import net.oauth.v2.example.provider.core.SampleOAuth2Provider;
 
