@@ -76,7 +76,8 @@ public class OAuth2ServletTest extends TestCase
 		
         OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.UNSUPPORTED_RESPONSE_TYPE);
         problem.setParameter(OAuth2ProblemException.HTTP_STATUS_CODE,new Integer(302));
-        problem.getParameters().put(OAuth2.REDIRECT_URI,"https://client.example.com/cb");
+        //problem.getParameters().put(OAuth2.REDIRECT_URI,"https://client.example.com/cb");
+        problem.setParameter(OAuth2.REDIRECT_URI,"https://client.example.com/cb");
         HttpServletResponse hsr = ic.getResponse();
         OAuth2Servlet.handleException(ic.getRequest(),hsr,problem,null,false,false);
         
@@ -88,7 +89,31 @@ public class OAuth2ServletTest extends TestCase
             
         
     }
-    
+
+    public void testHandleExceptionByRedirectURL2() throws Exception
+    {
+
+        ServletRunner sr = new ServletRunner();
+        ServletUnitClient sc = sr.newClient();
+        WebRequest request   = new PostMethodWebRequest( "https://test.meterware.com/myServlet" );
+        InvocationContext ic = sc.newInvocation( request );
+
+        OAuth2ProblemException problem = new OAuth2ProblemException(OAuth2.ErrorCode.UNSUPPORTED_RESPONSE_TYPE);
+        problem.setParameter(OAuth2ProblemException.HTTP_STATUS_CODE,new Integer(302));
+        //problem.getParameters().put(OAuth2.REDIRECT_URI,"https://client.example.com/cb");
+        problem.setParameter(OAuth2.REDIRECT_URI,"https://client.example.com/cb");
+        HttpServletResponse hsr = ic.getResponse();
+        OAuth2Servlet.handleException(ic.getRequest(),hsr,problem,null,false,false);
+
+
+        WebResponse response   = ic.getServletResponse();
+
+        assertEquals("ErroeRedirectResponse Location chceck", "https://client.example.com/cb?error=unsupported_response_type", response.getHeaderField(OAuth2ProblemException.HTTP_LOCATION));
+        assertEquals("ErrorRedirectResponse Code check", "302", new Integer(response.getResponseCode()).toString());
+
+
+    }
+
     private static final String toStringWithQuotation(Object from) {
     	
     	StringBuffer sb;
