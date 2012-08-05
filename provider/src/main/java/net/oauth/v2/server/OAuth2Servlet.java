@@ -45,6 +45,8 @@ import java.util.Collections;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion;
 import net.oauth.v2.OAuth2;
 import net.oauth.v2.OAuth2Message;
 import net.oauth.v2.OAuth2ProblemException;
@@ -107,27 +109,53 @@ public class OAuth2Servlet {
         }
         return Collections.unmodifiableSet(s);
     }
-    
+
+    private static Object getHttpCode(OAuth2ProblemException problem){
+
+        Object httpCode = problem.getParameters().get(OAuth2ProblemException.HTTP_STATUS_CODE);
+        if (httpCode == null) {
+            httpCode = ERROR_TO_HTTP_CODE.get(problem.getProblem());
+        }
+        if (httpCode == null) {
+            httpCode = SC_FORBIDDEN;
+        }
+
+        return httpCode;
+    }
+
+    //private Object getError(OAuth2ProblemException problem){
+    //    Object errorCode = problem.getProblem();
+    //    Object error = problem.getParameters().get(OAuth2.ERROR);
+    //    if (error == null) {
+    //        error = errorCode;
+    //        problem.getParameters().put(OAuth2.ERROR,errorCode);
+    //    }
+
+    //    return error;
+    //}
+
     public static void handleException(HttpServletRequest request, HttpServletResponse response,
     		Exception e, String realm, boolean sendBodyInJson, boolean withAuthHeader)
         throws IOException, ServletException {
     	
         if (e instanceof OAuth2ProblemException) {
             OAuth2ProblemException problem = (OAuth2ProblemException) e;
-            Object httpCode = problem.getParameters().get(OAuth2ProblemException.HTTP_STATUS_CODE);
-            if (httpCode == null) {
-                httpCode = ERROR_TO_HTTP_CODE.get(problem.getProblem());
-            }
-            if (httpCode == null) {
-                httpCode = SC_FORBIDDEN;
-            }
+            //Object httpCode = problem.getParameters().get(OAuth2ProblemException.HTTP_STATUS_CODE);
+            //if (httpCode == null) {
+            //    httpCode = ERROR_TO_HTTP_CODE.get(problem.getProblem());
+            //}
+            //if (httpCode == null) {
+            //    httpCode = SC_FORBIDDEN;
+            //}
+            Object httpCode = getHttpCode(problem);
 
-            Object errorCode = problem.getProblem();
-            Object error = problem.getParameters().get(OAuth2.ERROR);
-            if (error == null) {
-                error = errorCode;
-                problem.getParameters().put(OAuth2.ERROR,errorCode);
-            }
+
+            //Object errorCode = problem.getProblem();
+            //Object error = problem.getParameters().get(OAuth2.ERROR);
+            //if (error == null) {
+            //    error = errorCode;
+            //    problem.getParameters().put(OAuth2.ERROR,errorCode);
+            //}
 
 
             response.reset();
@@ -138,26 +166,35 @@ public class OAuth2Servlet {
             if(withAuthHeader){
             	response.addHeader("WWW-Authenticate", message.getWWWAuthenticateHeader(realm));
             }
-            
+
+            List<Map.Entry<String, String>> sendBackErrorParameters = new ArrayList<Map.Entry<String, String>>(SEND_BACK_ERROR_PARAMETERS.size());
+            for (Map.Entry parameter : message.getParameters()) {
+                if(SEND_BACK_ERROR_PARAMETERS.contains(parameter.getKey()))
+                {
+                    sendBackErrorParameters.add(parameter);
+                }
+            }
+
             if (sendBodyInJson) {
-            	List<Map.Entry<String, String>> sendBackErrorParameters = new ArrayList<Map.Entry<String, String>>(SEND_BACK_ERROR_PARAMETERS.size());
-            	for (Map.Entry parameter : message.getParameters()) {
-            		if(SEND_BACK_ERROR_PARAMETERS.contains(parameter.getKey()))
-            		{
-            			sendBackErrorParameters.add(parameter);
-            		}	
-            	}
+            	//List<Map.Entry<String, String>> sendBackErrorParameters = new ArrayList<Map.Entry<String, String>>(SEND_BACK_ERROR_PARAMETERS.size());
+            	//for (Map.Entry parameter : message.getParameters()) {
+            	//	if(SEND_BACK_ERROR_PARAMETERS.contains(parameter.getKey()))
+            	//	{
+            	//		sendBackErrorParameters.add(parameter);
+            	//	}
+            	//}
                 sendFormInJson(response, sendBackErrorParameters);
             }else{
             	//send back error info as parameters to the redirection URI query component
             	//String redirect_uri = message.getParameter(OAuth2.REDIRECT_URI);
-                List<Map.Entry<String, String>> sendBackErrorParameters = new ArrayList<Map.Entry<String, String>>(SEND_BACK_ERROR_PARAMETERS.size());
-                for (Map.Entry parameter : message.getParameters()) {
-                    if(SEND_BACK_ERROR_PARAMETERS.contains(parameter.getKey()))
-                    {
-                        sendBackErrorParameters.add(parameter);
-                    }
-                }
+
+                //List<Map.Entry<String, String>> sendBackErrorParameters = new ArrayList<Map.Entry<String, String>>(SEND_BACK_ERROR_PARAMETERS.size());
+                //for (Map.Entry parameter : message.getParameters()) {
+                //    if(SEND_BACK_ERROR_PARAMETERS.contains(parameter.getKey()))
+                //    {
+                //        sendBackErrorParameters.add(parameter);
+                //    }
+                //}
                 String redirect_uri = constructErrorRedirectUri(message,sendBackErrorParameters);
                 //ToDo maybe this part should be out of core code and be in example.
                 //String response_type = message.getParameter(OAuth2.RESPONSE_TYPE);

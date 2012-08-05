@@ -51,7 +51,7 @@ import java.util.Map;
  */
 public class OAuth2ProblemException extends OAuth2Exception {
 
-    public static final String OAUTH_PROBLEM = "oauth_problem";
+    //public static final String OAUTH_PROBLEM = "oauth_problem";
     /** The name of a parameter whose value is the HTTP request. */
     public static final String HTTP_REQUEST = "HTTP request";
     /** The name of a parameter whose value is the HTTP response. */
@@ -70,7 +70,8 @@ public class OAuth2ProblemException extends OAuth2Exception {
     public OAuth2ProblemException(String problem) {
         super(problem);
         if (problem != null) {
-            parameters.put(OAUTH_PROBLEM, problem);
+            //parameters.put(OAUTH_PROBLEM, problem);
+            parameters.put(OAuth2.ERROR, problem);
         }
     }
 
@@ -113,7 +114,8 @@ public class OAuth2ProblemException extends OAuth2Exception {
     }
 
     public String getProblem() {
-        return (String) getParameters().get(OAUTH_PROBLEM);
+        //return (String) getParameters().get(OAUTH_PROBLEM);
+        return (String) getParameters().get(OAuth2.ERROR);
     }
 
     public int getHttpStatusCode() {
