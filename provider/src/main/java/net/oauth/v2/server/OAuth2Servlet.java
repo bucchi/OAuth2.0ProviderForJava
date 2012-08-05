@@ -46,7 +46,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion;
 import net.oauth.v2.OAuth2;
 import net.oauth.v2.OAuth2Message;
 import net.oauth.v2.OAuth2ProblemException;
