@@ -48,7 +48,7 @@
     <repository>
       <id>codehaus-release-repo</id>
       <name>Codehaus Release Repo</name>
-      <url>http://repository.codehaus.org</url>
+      <url>https://repository.codehaus.org</url>
     </repository>
   </repositories>
 </project>
